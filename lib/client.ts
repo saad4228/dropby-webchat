@@ -1,0 +1,138 @@
+export async function api(path: string, body?: unknown, method?: string) {
+  const res = await fetch("/api/" + path, {
+    method: method || (body ? "POST" : "GET"),
+    credentials: "same-origin",
+    headers:
+      body instanceof FormData
+        ? {}
+        : body
+          ? { "Content-Type": "application/json" }
+          : {},
+    body:
+      body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
+  });
+  const data: any = await res.json();
+  if (!res.ok)
+    throw Object.assign(new Error(data.error || "Request failed"), {
+      status: res.status,
+    });
+  return data;
+}
+export type Identity = {
+  id: string;
+  name: string;
+  avatar: string;
+  color: string;
+  signedIn?: boolean;
+};
+export type Member = Identity & {
+  role: string;
+  online: boolean;
+  typingUntil: number;
+  inCall: number;
+  muted: number;
+};
+export type Message = {
+  id: string;
+  senderId: string;
+  name: string;
+  avatar: string;
+  color: string;
+  text: string;
+  created: number;
+  edited?: number;
+  replyId?: string;
+  attachmentId?: string;
+  fileName?: string;
+  fileMime?: string;
+  fileSize?: number;
+  pinned?: number;
+};
+export type Room = {
+  id: string;
+  slug: string;
+  description: string;
+  visibility: string;
+  theme: string;
+  owner: string;
+  locked: boolean;
+};
+export type Snapshot = {
+  room: Room;
+  role: string;
+  messages: Message[];
+  members: Member[];
+  reactions: {
+    messageId: string;
+    sessionId: string;
+    emoji: string;
+    name: string;
+  }[];
+  signals: any[];
+  hasMore: boolean;
+};
+export const avatars = [
+  "🏔️",
+  "🦊",
+  "🐻",
+  "🌿",
+  "🪐",
+  "🌊",
+  "⚽",
+  "🎮",
+  "🌻",
+  "👩‍🚀",
+  "🐱",
+  "🦋",
+  "🌙",
+  "🐼",
+  "🍄",
+  "🪁",
+];
+export const colors = [
+  "#4b6bfa",
+  "#a27af5",
+  "#ee8cb7",
+  "#f2a679",
+  "#e5be67",
+  "#7cb396",
+  "#62bcbc",
+];
+export const themes = [
+  {
+    id: "alpine",
+    name: "Alpine escape",
+    color: "#b7cee4",
+    subtitle: "A breath of fresh air",
+  },
+  {
+    id: "lavender",
+    name: "Lavender haze",
+    color: "#c8b8e5",
+    subtitle: "Soft, slow evenings",
+  },
+  {
+    id: "ocean",
+    name: "Ocean blue",
+    color: "#9dceda",
+    subtitle: "Go with the flow",
+  },
+  {
+    id: "sunset",
+    name: "Golden hour",
+    color: "#edbd9b",
+    subtitle: "Stay a little longer",
+  },
+  {
+    id: "forest",
+    name: "Into the green",
+    color: "#a2b9a6",
+    subtitle: "Find your quiet",
+  },
+  {
+    id: "midnight",
+    name: "After hours",
+    color: "#333b61",
+    subtitle: "For the night owls",
+  },
+];

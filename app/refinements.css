@@ -1,0 +1,722 @@
+/* Comfortable reading sizes and quieter scenic surfaces. */
+.floating-note {
+  pointer-events: none;
+}
+.typing-indicator > span {
+  margin-left: 3px;
+}
+.home-scenery {
+  background:
+    linear-gradient(
+      180deg,
+      #eef1f9bd 0%,
+      #f2f3f8d1 24%,
+      #f8f7f1e0 55%,
+      #fafbf9 96%
+    ),
+    url("/alpine.jpg") center 34% / cover no-repeat;
+}
+.hero-description {
+  font-size: 14px;
+}
+.eyebrow {
+  font-size: 10px;
+}
+.nav-links {
+  font-size: 13px;
+}
+.nav-join {
+  font-size: 13px;
+}
+.room-input input {
+  font-size: 12px;
+}
+.room-input > button {
+  font-size: 12px;
+}
+.create-line,
+.create-line button {
+  font-size: 11px;
+}
+.hero-assurances {
+  font-size: 10px;
+}
+.demo-chat {
+  background:
+    linear-gradient(#ffffffe0, #ffffffbe),
+    url("/alpine.jpg") center/cover;
+}
+.demo-conversation {
+  height: 405px;
+}
+.demo-msg p {
+  font-size: 11px;
+}
+.demo-msg label {
+  font-size: 9px;
+}
+.demo-out > p {
+  font-size: 11px;
+}
+.demo-chat header > div > strong {
+  font-size: 13px;
+}
+.demo-chat header > div > span {
+  font-size: 9px;
+}
+.demo-composer > span {
+  font-size: 10px;
+}
+.floating-note {
+  font-size: 10px;
+}
+.demo-label {
+  font-size: 9px;
+}
+.note-bottom > div {
+  font-size: 11px;
+}
+.feature-strip h3 {
+  font-size: 13px;
+}
+.feature-strip p {
+  font-size: 12px;
+}
+.feature-strip {
+  padding-top: 35px;
+  padding-bottom: 35px;
+}
+.make-yours p {
+  font-size: 14px;
+}
+.section-label {
+  font-size: 9px;
+}
+.text-link {
+  font-size: 12px;
+}
+.steps h3 {
+  font-size: 14px;
+}
+.steps p {
+  font-size: 12px;
+}
+.creator-section h3 {
+  font-size: 14px;
+}
+.creator-section p {
+  font-size: 11px;
+  line-height: 1.8;
+}
+.creator-section .section-label {
+  font-size: 8px;
+}
+footer > span,
+footer > div {
+  font-size: 10px;
+}
+.chat-scenery {
+  background:
+    linear-gradient(120deg, #e0e8f7bf, #f7f0e2c9 60%, #e4e7fbc4),
+    var(--custom-wallpaper, url("/alpine.jpg")) center 45% / cover;
+}
+.conversation-shell {
+  background: #ffffff52;
+}
+.room-title strong {
+  font-size: 16px;
+}
+.room-title > span {
+  font-size: 11px;
+}
+.room-welcome h2 {
+  font-size: 25px;
+}
+.room-welcome p {
+  font-size: 12px;
+}
+.room-welcome .section-label {
+  font-size: 8px;
+}
+.room-welcome > button {
+  font-size: 10px;
+}
+.chat-date {
+  font-size: 9px;
+}
+.message-bubble p {
+  font-size: 14px;
+}
+.message-byline {
+  font-size: 12px;
+}
+.message-byline time {
+  font-size: 10px;
+}
+.message-receipt {
+  font-size: 9px;
+}
+.composer-input > textarea {
+  font-size: 13px;
+}
+.composer-hint {
+  font-size: 8px;
+}
+.member strong {
+  font-size: 13px;
+}
+.member > div > span {
+  font-size: 11px;
+}
+.room-panel > header h3 {
+  font-size: 16px;
+}
+.room-panel > header span {
+  font-size: 10px;
+}
+.panel-search input {
+  font-size: 12px;
+}
+.theme-tile strong {
+  font-size: 11px;
+}
+.theme-tile small {
+  font-size: 9px;
+}
+.room-options > button {
+  font-size: 12px;
+}
+.share-panel p {
+  font-size: 12px;
+}
+.message-menu > button {
+  font-size: 12px;
+}
+.input-label {
+  font-size: 12px;
+}
+.input-label > input,
+.input-label > textarea,
+.input-with-icon {
+  font-size: 13px;
+}
+.onboarding > p {
+  font-size: 13px;
+}
+.primary {
+  font-size: 13px;
+}
+.quick-join {
+  font-size: 11px;
+}
+.segmented button {
+  font-size: 12px;
+}
+.visibility-choice strong {
+  font-size: 12px;
+}
+.visibility-choice small {
+  font-size: 11px;
+}
+.privacy-note {
+  font-size: 9px;
+}
+.identity-preview strong {
+  font-size: 12px;
+}
+.identity-preview p {
+  font-size: 14px;
+}
+.prejoin-room strong {
+  font-size: 13px;
+}
+.prejoin-room small {
+  font-size: 10px;
+}
+.prejoin-devices {
+  font-size: 10px;
+}
+.custom-theme summary {
+  font-size: 11px;
+}
+.panel-note {
+  font-size: 9px;
+}
+.settings-row strong {
+  font-size: 12px;
+}
+.settings-row small {
+  font-size: 10px;
+}
+.empty-room h3 {
+  font-size: 18px;
+}
+.empty-room p {
+  font-size: 12px;
+}
+.hello-suggestions button {
+  font-size: 11px;
+}
+.empty-room > div:first-child {
+  margin-bottom: 24px;
+}
+.info-modal p {
+  font-size: 14px;
+}
+@media (min-width: 1450px) {
+  .demo-conversation {
+    height: 425px;
+  }
+}
+@media (max-width: 1100px) {
+  .feature-strip h3 {
+    font-size: 12px;
+  }
+  .feature-strip p {
+    font-size: 11px;
+  }
+  .hero-description {
+    font-size: 12px;
+  }
+  .nav-links {
+    font-size: 11px;
+  }
+  .room-input input,
+  .room-input > button {
+    font-size: 11px;
+  }
+  .hero-assurances {
+    font-size: 8px;
+  }
+  .create-line,
+  .create-line button {
+    font-size: 10px;
+  }
+  .eyebrow {
+    font-size: 8px;
+  }
+  .demo-label {
+    font-size: 8px;
+  }
+  .demo-msg p {
+    font-size: 10px;
+  }
+  .demo-out > p {
+    font-size: 10px;
+  }
+  .demo-conversation {
+    height: 395px;
+  }
+}
+@media (max-width: 800px) {
+  .nav-links {
+    font-size: 10px;
+  }
+  .hero-description {
+    font-size: 11px;
+  }
+  .eyebrow {
+    font-size: 7px;
+  }
+  .room-input input,
+  .room-input > button {
+    font-size: 9px;
+  }
+  .create-line,
+  .create-line button {
+    font-size: 9px;
+  }
+  .hero-assurances {
+    font-size: 7px;
+  }
+  .demo-label {
+    font-size: 6px;
+  }
+  .demo-chat header > div > strong {
+    font-size: 11px;
+  }
+  .demo-chat header > div > span {
+    font-size: 7px;
+  }
+  .demo-msg p,
+  .demo-out > p {
+    font-size: 9px;
+  }
+  .demo-msg label {
+    font-size: 8px;
+  }
+  .floating-note {
+    font-size: 8px;
+  }
+  .note-bottom > div {
+    font-size: 9px;
+  }
+  .demo-composer > span {
+    font-size: 8px;
+  }
+  .demo-conversation {
+    height: 355px;
+  }
+  .feature-strip h3 {
+    font-size: 11px;
+  }
+  .feature-strip p {
+    font-size: 10px;
+  }
+  .make-yours p {
+    font-size: 12px;
+  }
+  .steps h3 {
+    font-size: 12px;
+  }
+  .steps p {
+    font-size: 11px;
+  }
+  .creator-section h3 {
+    font-size: 12px;
+  }
+  .creator-section p {
+    font-size: 10px;
+  }
+  .room-title strong {
+    font-size: 14px;
+  }
+  .room-title > span {
+    font-size: 9px;
+  }
+}
+@media (max-width: 600px) {
+  .home-scenery {
+    height: 1350px;
+    background:
+      linear-gradient(#e5ebf7ad, #f8f7f1e0 52%, #fafbf9 94%),
+      url("/alpine.jpg") 48% 0 / auto 1150px no-repeat;
+  }
+  .hero-description {
+    font-size: 13px;
+  }
+  .eyebrow {
+    font-size: 8px;
+  }
+  .room-input input,
+  .room-input > button {
+    font-size: 11px;
+  }
+  .create-line,
+  .create-line button {
+    font-size: 10px;
+  }
+  .hero-assurances {
+    font-size: 8px;
+  }
+  .demo-label {
+    font-size: 7px;
+  }
+  .demo-chat header > div > strong {
+    font-size: 12px;
+  }
+  .demo-chat header > div > span {
+    font-size: 8px;
+  }
+  .demo-msg p,
+  .demo-out > p {
+    font-size: 10px;
+  }
+  .demo-msg label {
+    font-size: 8px;
+  }
+  .demo-conversation {
+    height: 390px;
+  }
+  .floating-note {
+    font-size: 8px;
+  }
+  .note-bottom > div {
+    font-size: 10px;
+  }
+  .feature-strip h3 {
+    font-size: 12px;
+  }
+  .feature-strip p {
+    font-size: 11px;
+  }
+  .make-yours p {
+    font-size: 13px;
+  }
+  .steps h3 {
+    font-size: 14px;
+  }
+  .steps p {
+    font-size: 12px;
+  }
+  .creator-section h3 {
+    font-size: 12px;
+  }
+  .creator-section p {
+    font-size: 10px;
+  }
+  .room-title strong {
+    font-size: 12px;
+  }
+  .room-title > span {
+    font-size: 8px;
+  }
+  .room-welcome h2 {
+    font-size: 21px;
+  }
+  .room-welcome p {
+    font-size: 11px;
+  }
+  .room-welcome .section-label {
+    font-size: 6px;
+  }
+  .room-welcome > button {
+    font-size: 9px;
+  }
+  .chat-date {
+    font-size: 7px;
+  }
+  .message-bubble p {
+    font-size: 13px;
+  }
+  .message-byline {
+    font-size: 10px;
+  }
+  .message-byline time {
+    font-size: 8px;
+  }
+  .message-receipt {
+    font-size: 8px;
+  }
+  .composer-input > textarea {
+    font-size: 12px;
+  }
+  .composer-input > textarea::placeholder {
+    font-size: 10px;
+  }
+  .composer-hint {
+    font-size: 6px;
+  }
+  .empty-room h3 {
+    font-size: 15px;
+  }
+  .empty-room p {
+    font-size: 10px;
+  }
+  .hello-suggestions button {
+    font-size: 9px;
+  }
+  .member strong {
+    font-size: 13px;
+  }
+  .member > div > span {
+    font-size: 11px;
+  }
+  .theme-tile strong {
+    font-size: 11px;
+  }
+  .theme-tile small {
+    font-size: 9px;
+  }
+  .onboarding > p {
+    font-size: 12px;
+  }
+  .input-label {
+    font-size: 11px;
+  }
+  .input-label > input,
+  .input-label > textarea,
+  .input-with-icon {
+    font-size: 13px;
+  }
+  .privacy-note {
+    font-size: 9px;
+  }
+}
+/* Final readability and small-screen fit. */
+.demo-conversation {
+  height: 455px;
+}
+.hero-description,
+.feature-strip p,
+.make-yours p,
+.steps p {
+  color: #68758a;
+}
+.hero-assurances,
+.create-line {
+  color: #788396;
+}
+.section-label {
+  color: #738095;
+}
+.creator-section p,
+footer > span,
+footer > div {
+  color: #768293;
+}
+.room-title > span,
+.message-byline time,
+.message-receipt,
+.room-panel > header span,
+.member > div > span,
+.panel-note,
+.settings-row small,
+.theme-tile small {
+  color: #71809a;
+}
+.room-welcome p,
+.room-welcome .section-label,
+.chat-date {
+  color: #71809a;
+}
+.demo-chat .demo-msg label span,
+.demo-label,
+.date-label {
+  color: #6c7a92;
+}
+.steps p br {
+  display: initial;
+}
+.demo-chat .demo-conversation {
+  position: relative;
+}
+.demo-wrap .note-bottom {
+  bottom: -3px;
+}
+.theme-midnight .room-welcome h2 {
+  color: #d4dced;
+}
+.theme-midnight .room-welcome p {
+  color: #adb9d0;
+}
+@media (min-width: 1450px) {
+  .demo-conversation {
+    height: 480px;
+  }
+}
+@media (max-width: 1100px) {
+  .demo-conversation {
+    height: 440px;
+  }
+}
+@media (max-width: 800px) {
+  .demo-conversation {
+    height: 410px;
+  }
+}
+@media (max-width: 600px) {
+  .hero h1 {
+    font-size: clamp(30px, 9.1vw, 40px);
+    white-space: normal;
+  }
+  .demo-conversation {
+    height: 445px;
+  }
+  .steps p br {
+    display: initial;
+  }
+  .hero-description {
+    color: #68758a;
+  }
+}
+[data-mode="dark"] .hero-description,
+[data-mode="dark"] .feature-strip p,
+[data-mode="dark"] .make-yours p,
+[data-mode="dark"] .steps p {
+  color: #aab5c9;
+}
+[data-mode="dark"] .room-title > span,
+[data-mode="dark"] .message-byline time,
+[data-mode="dark"] .message-receipt,
+[data-mode="dark"] .room-panel > header span,
+[data-mode="dark"] .member > div > span,
+[data-mode="dark"] .panel-note,
+[data-mode="dark"] .settings-row small,
+[data-mode="dark"] .theme-tile small {
+  color: #a3b2ce;
+}
+.save-identity {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 12px 9px;
+  font-size: 12px;
+  border-radius: 8px;
+  color: #7c8baa;
+}
+.save-identity small,
+.account-saved small {
+  display: block;
+  font-size: 9px;
+  color: #8d9bb4;
+  margin-top: 5px;
+}
+.save-identity > svg:last-child {
+  margin-left: auto;
+}
+.save-identity:hover {
+  background: #edf1f966;
+}
+.account-saved {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 11px;
+  color: #7a9b85;
+  padding: 12px 9px;
+  line-height: 1.7;
+}
+.account-saved svg {
+  margin-top: 2px;
+}
+.call-device-pickers {
+  display: flex;
+  gap: 12px;
+  margin: 22px 0 0;
+}
+.call-device-pickers label {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 10px;
+  color: #a7b6cf;
+}
+.call-device-pickers select {
+  font-size: 11px;
+  padding: 10px 9px;
+  background: #ffffff12;
+  border: 1px solid #ffffff20;
+  border-radius: 8px;
+  width: 100%;
+  color: #d5dff0;
+}
+.call-device-pickers option {
+  background: #303c54;
+  color: #d5dff0;
+}
+.media-viewer .viewer-navigation {
+  position: absolute;
+  inset: 45% 26px auto;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 2;
+}
+.viewer-navigation button {
+  height: 42px;
+  width: 42px;
+  border-radius: 50%;
+  background: #28334cbb;
+  border: 1px solid #ffffff33;
+  color: white;
+  pointer-events: auto;
+  backdrop-filter: blur(10px);
+}
+.viewer-navigation button:disabled {
+  opacity: 0.2;
+  pointer-events: none;
+}
