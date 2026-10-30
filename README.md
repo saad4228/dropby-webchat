@@ -11,6 +11,7 @@ npm ci
 npm run build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_green_gargoyle.sql
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_lively_black_tarantula.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_yellow_arclight.sql
 npm run dev -- --port 5173
 ```
 
@@ -19,6 +20,7 @@ Open the printed local URL. Run the initial migration once per local database. L
 ## Implemented
 
 - Responsive homepage, clearly labeled interactive demo, onboarding, room URLs, and optional Quick Join.
+- Compact homepage composition with a continuous scenic background and consistent typography. Rooms can use an emoji logo or a persistent owner-uploaded JPG/PNG/WebP image (up to 7 MiB).
 - Server-generated guest identities with hashed session secrets and 30-day HttpOnly cookies; no token in localStorage.
 - Optional ChatGPT sign-in links a guest identity to a verified Site-scoped account ID, preserving the profile and its room memberships on other signed-in devices. Visitors can continue as guests.
 - Public and password-protected rooms, salted PBKDF2 password hashing, atomic unique room creation, owner/moderator/member roles, and locked joins.
@@ -28,6 +30,7 @@ Open the printed local URL. Run the initial migration once per local database. L
 - Browser voice recording: pause/resume, cancel, stop, preview before attachment, native audio playback, seeking and speed controls.
 - Actual small-group WebRTC audio/video calls, authorized signaling, microphone/camera/device selection, screen sharing, floating/expanded panels, and a four-person cap. A configurable LiveKit SFU integration supports larger groups.
 - Six themes, persistent personal overrides, shared owner-controlled presets, custom message/accent colors with contrasting bubble text, uploaded local wallpapers, opacity/blur controls, light/dark mode, and reduced motion.
+- Wallpapers up to 7 MiB persist in IndexedDB; short browser object URLs display large images without CSS custom-property limits or localStorage quota failures. The categorized emoji picker includes 647 emojis for messages and reactions.
 - Server-enforced mute/unmute, bans, moderator assignments, message reports and owner/moderator report review.
 - Contextual floating panels, keyboard composer, focus-trapped dialogs, semantic controls, meaningful empty/error/loading states.
 
@@ -78,13 +81,16 @@ With the local server running:
 npx tsc --noEmit
 node tests/api.mjs
 node --test tests/call-token.test.mjs
+node --test tests/uploads.test.mjs
 npx playwright test
 npm run build
 ```
 
-The API suite uses independent cookie jars and covers 28 room, privacy, messaging, idempotency, permission, reaction, media range, moderation, signaling, CSRF, session and optional account scenarios. Four unit tests verify SFU configuration, token signatures, room-scoped grants, expiry and bounded call capacities. Two browser journeys exercise onboarding, persisted messages between isolated browsers, image upload/viewing, voice recording with pause/resume/preview, synchronized reactions, an actual peer connection with synthetic media, themes, mobile layout and dark mode. Screenshots are stored in ignored `outputs/`.
+The API suite uses independent cookie jars and covers 31 room, logo authorization, privacy, messaging, idempotency, permission, reaction, media range, moderation, signaling, CSRF, session and optional account scenarios. Nine unit tests verify SFU tokens/capacities, upload error handling, image limits and signature checks. Five browser journeys cover onboarding, two-user conversations, actual peer calls with synthetic media, mobile/dark layouts, large image and logo uploads, wallpaper persistence, emoji selection and room details. Screenshots are stored in ignored `outputs/`.
 
 The default Playwright configuration uses installed Windows Chrome; set `PLAYWRIGHT_CHROME_PATH` to another Chrome/Chromium executable on a different host. Tests use synthetic microphone/camera devices. They do not prove real hardware quality, Safari/Firefox compatibility or connectivity across all NAT/firewall combinations. Browser permissions and device/network behavior require manual cross-browser testing.
+
+Upload regressions additionally cover non-JSON 413 responses, image signature validation, 3 MiB room logos, 5 MiB chat images, 6 MiB wallpaper persistence, larger-than-7-MiB rejection, expanded emojis and live room-detail updates. `next.config.ts` allows 16 MiB in the framework multipart reader so the API's 15 MiB file limit can be reached; multipart overhead is included. Clients translate plain-text upstream failures into useful errors.
 
 ## Known scope limits
 

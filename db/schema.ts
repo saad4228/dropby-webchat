@@ -22,6 +22,8 @@ export const rooms = sqliteTable("rooms", {
   passwordHash: text(),
   owner: text().notNull(),
   theme: text().notNull().default("alpine"),
+  logo: text().notNull().default("✳"),
+  logoImageId: text(),
   locked: integer().notNull().default(0),
   created: integer().notNull(),
 });

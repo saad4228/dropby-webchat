@@ -6,6 +6,12 @@ import {
   messageSchema,
 } from "./validation";
 import { z } from "zod";
+import {
+  MAX_IMAGE_BYTES,
+  IMAGE_MIMES,
+  imageSignatureMatches,
+} from "./upload-limits";
+import { allEmojis } from "./emojis";
 import { callConfig } from "./call-token";
 
 type Row = Record<string, any>;
@@ -135,6 +141,8 @@ const safeRoom = (r: Row) => ({
   theme: r.theme,
   locked: !!r.locked,
   owner: r.owner,
+  logo: r.logo,
+  logoImageId: r.logoImageId,
 });
 const admin = (m: Row) => m.role === "owner" || m.role === "moderator";
 
@@ -219,7 +227,7 @@ export async function handle(req: Request) {
         await db().batch([
           db()
             .prepare(
-              "INSERT INTO rooms (id,slug,description,visibility,passwordHash,owner,theme,locked,created) VALUES (?,?,?,?,?,?,?,0,?)",
+              "INSERT INTO rooms (id,slug,description,visibility,passwordHash,owner,theme,locked,created,logo) VALUES (?,?,?,?,?,?,?,0,?,?)",
             )
             .bind(
               id,
@@ -230,6 +238,7 @@ export async function handle(req: Request) {
               user.id,
               "alpine",
               Date.now(),
+              data.logo,
             ),
           db()
             .prepare(
@@ -350,6 +359,53 @@ export async function handle(req: Request) {
       return json({ room: safeRoom(r!) });
     }
     const { room, member } = await access(slug, user);
+    if (action === "logo") {
+      if (method === "GET") {
+        if (!room.logoImageId) fail("Room image unavailable.", 404);
+        const object = await env.BUCKET?.get(room.logoImageId);
+        if (!object) fail("Room image unavailable.", 404);
+        return new Response(object!.body, {
+          headers: {
+            "Content-Type": object!.httpMetadata?.contentType || "image/jpeg",
+            "Content-Length": String(object!.size),
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "private, no-store",
+          },
+        });
+      }
+      if (method !== "POST") fail("Method not allowed.", 405);
+      if (member.role !== "owner")
+        fail("Only the room owner can change the room image.", 403);
+      await rate("logo:" + user.id, 12);
+      if (
+        Number(req.headers.get("content-length") || 0) >
+        MAX_IMAGE_BYTES + 65536
+      )
+        fail("Room images can be up to 7 MB.", 413);
+      const form = await req.formData(),
+        file = form.get("file");
+      if (!(file instanceof File) || !file.size || file.size > MAX_IMAGE_BYTES)
+        fail("Choose a room image up to 7 MB.", 413);
+      const f = file as File;
+      if (!IMAGE_MIMES.includes(f.type))
+        fail("Choose a JPG, PNG or WebP room image.");
+      const bytes = new Uint8Array(await f.arrayBuffer());
+      if (!imageSignatureMatches(bytes, f.type))
+        fail("The room image contents do not match its format.");
+      if (!env.BUCKET) fail("Image storage is unavailable.", 503);
+      const id = "room-logo-" + crypto.randomUUID();
+      await env.BUCKET!.put(id, bytes, {
+        httpMetadata: { contentType: f.type },
+      });
+      try {
+        await run("UPDATE rooms SET logoImageId=? WHERE id=?", id, room.id);
+      } catch (e) {
+        await env.BUCKET!.delete(id);
+        throw e;
+      }
+      if (room.logoImageId) await env.BUCKET!.delete(room.logoImageId);
+      return json({ ok: true, logoImageId: id }, 201);
+    }
     const now = Date.now();
     if (method === "GET" && !action) {
       await run(
@@ -426,15 +482,21 @@ export async function handle(req: Request) {
             "midnight",
           ]),
           locked: z.boolean(),
+          logo: z.string().min(1).max(12).optional(),
+          clearLogoImage: z.boolean().default(false),
         })
         .parse(await req.json());
       await run(
-        "UPDATE rooms SET description=?,theme=?,locked=? WHERE id=?",
+        "UPDATE rooms SET description=?,theme=?,locked=?,logo=?,logoImageId=? WHERE id=?",
         b.description,
         b.theme,
         b.locked ? 1 : 0,
+        b.logo || room.logo,
+        b.clearLogoImage ? null : room.logoImageId,
         room.id,
       );
+      if (b.clearLogoImage && room.logoImageId)
+        await env.BUCKET?.delete(room.logoImageId);
       return json({ ok: true });
     }
     if (action === "members" && method === "PATCH") {
@@ -600,7 +662,12 @@ export async function handle(req: Request) {
         await rate("reaction:" + user.id, 90);
         const b = z
           .object({
-            emoji: z.enum(["❤️", "🔥", "👍", "😂", "😍", "🎉", "⚽", "👀"]),
+            emoji: z
+              .string()
+              .refine(
+                (e) => allEmojis.includes(e),
+                "Choose a supported emoji.",
+              ),
           })
           .parse(await req.json());
         const old = await first(

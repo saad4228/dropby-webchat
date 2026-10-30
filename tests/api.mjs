@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 const origin = process.env.TEST_ORIGIN || "http://localhost:5173";
 let count = 0;
 const guest = () => ({ cookie: "", id: "" });
@@ -72,6 +73,28 @@ const s = await request(member, "rooms/" + slug);
 assert.equal(s.members.length, 2);
 assert.equal(s.messages.length, 0);
 ok("Join an empty real room without sample members");
+assert.equal(s.room.logo, "✳");
+const logoForm = new FormData();
+logoForm.append(
+  "file",
+  new File([readFileSync("public/stadium.jpg")], "room.jpg", {
+    type: "image/jpeg",
+  }),
+);
+await request(owner, "rooms/" + slug + "/logo", logoForm, "POST", 201);
+assert.ok((await request(member, "rooms/" + slug)).room.logoImageId);
+const logo = await fetch(origin + "/api/rooms/" + slug + "/logo", {
+  headers: { cookie: member.cookie },
+});
+assert.equal(logo.status, 200);
+assert.equal(logo.headers.get("content-type"), "image/jpeg");
+ok("Room images persist and are visible to authorized members");
+await request(member, "rooms/" + slug + "/logo", {}, "POST", 403);
+const hiddenLogo = await fetch(origin + "/api/rooms/" + slug + "/logo", {
+  headers: { cookie: stranger.cookie },
+});
+assert.equal(hiddenLogo.status, 403);
+ok("Only owners change logos and non-members cannot retrieve them");
 await request(member, "rooms", { slug, visibility: "public" }, "POST", 409);
 ok("Prevent duplicate room creation");
 await request(
@@ -151,6 +174,22 @@ await request(
 );
 assert.equal((await request(owner, "rooms/" + slug)).reactions.length, 0);
 ok("Add and remove synchronized reactions");
+await request(
+  member,
+  "rooms/" + slug + "/messages/" + messageId + "/reaction",
+  { emoji: "🦊" },
+);
+assert.ok(
+  (await request(owner, "rooms/" + slug)).reactions.some(
+    (r) => r.emoji === "🦊",
+  ),
+);
+await request(
+  member,
+  "rooms/" + slug + "/messages/" + messageId + "/reaction",
+  { emoji: "🦊" },
+);
+ok("Expanded emoji reactions synchronize");
 await request(owner, "rooms/" + slug + "/messages/" + messageId + "/pin", {});
 assert.equal((await request(member, "rooms/" + slug)).messages[0].pinned, 1);
 ok("Moderator pins");

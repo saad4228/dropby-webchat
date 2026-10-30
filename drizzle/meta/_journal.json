@@ -15,6 +15,13 @@
       "when": 1793401080667,
       "tag": "0001_lively_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793402629451,
+      "tag": "0002_yellow_arclight",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Avatar } from "./brand";
+import { EmojiPicker } from "./emoji-picker";
 import { Message as Msg, Identity, Snapshot } from "../lib/client";
 function VoicePlayer({ src }: { src: string }) {
   const ref = useRef<HTMLAudioElement>(null),
@@ -331,22 +332,42 @@ export default function Message({
               setReact(false);
             }}
           />
-          <div className="message-menu">
-            <div className="reaction-picker">
-              {["❤️", "🔥", "👍", "😂", "😍", "🎉", "⚽", "👀"].map((e) => (
+          <div className={"message-menu " + (react ? "all-reactions" : "")}>
+            {react ? (
+              <EmojiPicker
+                onClose={() => setReact(false)}
+                onSelect={(e) => {
+                  onAction("reaction", m, e);
+                  setMenu(false);
+                  setReact(false);
+                }}
+              />
+            ) : (
+              <div className="reaction-picker">
+                {["❤️", "🔥", "👍", "😂", "😍", "🎉", "⚽", "👀"].map((e) => (
+                  <button
+                    key={e}
+                    onClick={() => {
+                      onAction("reaction", m, e);
+                      setMenu(false);
+                      setReact(false);
+                    }}
+                    aria-label={"React " + e}
+                  >
+                    {e}
+                  </button>
+                ))}
                 <button
-                  key={e}
+                  aria-label="More reaction emojis"
                   onClick={() => {
-                    onAction("reaction", m, e);
                     setMenu(false);
-                    setReact(false);
+                    setReact(true);
                   }}
-                  aria-label={"React " + e}
                 >
-                  {e}
+                  <Plus size={15} />
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
             {menu && (
               <>
                 {[

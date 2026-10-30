@@ -22,6 +22,9 @@ import {
   Moon,
 } from "lucide-react";
 import { Avatar } from "./brand";
+import { RoomLogoPicker } from "./room-logo-picker";
+import { RoomMark } from "./room-mark";
+import { IMAGE_MIMES, MAX_IMAGE_BYTES } from "../lib/upload-limits";
 import { api, Snapshot, Identity, themes, Message } from "../lib/client";
 export type Appearance = {
   theme: string;
@@ -79,6 +82,9 @@ export default function RoomPanels({
     [memberMenu, setMemberMenu] = useState(""),
     [description, setDescription] = useState(snapshot.room.description),
     [locked, setLocked] = useState(snapshot.room.locked),
+    [logo, setLogo] = useState(snapshot.room.logo || "✳"),
+    [logoFile, setLogoFile] = useState<File | null>(null),
+    [clearLogoImage, setClearLogoImage] = useState(false),
     [saving, setSaving] = useState(false),
     [reports, setReports] = useState<any[] | null>(null);
   const online = snapshot.members.filter((m) => m.online).length;
@@ -121,9 +127,22 @@ export default function RoomPanels({
     try {
       await api(
         "rooms/" + snapshot.room.slug + "/settings",
-        { description, locked, theme: appearance.theme || snapshot.room.theme },
+        {
+          description,
+          locked,
+          theme: appearance.theme || snapshot.room.theme,
+          logo,
+          clearLogoImage,
+        },
         "PATCH",
       );
+      if (logoFile) {
+        const form = new FormData();
+        form.append("file", logoFile);
+        await api("rooms/" + snapshot.room.slug + "/logo", form);
+        setLogoFile(null);
+      }
+      setClearLogoImage(false);
       onRefresh();
       onError("Room settings saved.");
     } catch (e: any) {
@@ -151,7 +170,7 @@ export default function RoomPanels({
         aria-label="Close panel"
       />
       <aside className={"room-panel " + panel} aria-label={title[panel]}>
-        <header>
+        <header className="room-panel-heading">
           <div>
             <h3>{title[panel] || "Room"}</h3>
             <span>
@@ -370,8 +389,12 @@ export default function RoomPanels({
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (!f) return;
-                    if (f.size > 2 * 1024 * 1024) {
-                      onError("Choose a wallpaper under 2 MB.");
+                    if (!IMAGE_MIMES.includes(f.type)) {
+                      onError("Choose a JPG, PNG or WebP wallpaper.");
+                      return;
+                    }
+                    if (f.size > MAX_IMAGE_BYTES) {
+                      onError("Wallpapers can be up to 7 MB.");
                       return;
                     }
                     const reader = new FileReader();
@@ -382,7 +405,11 @@ export default function RoomPanels({
                       });
                     reader.readAsDataURL(f);
                   }}
+                  aria-label="Upload wallpaper (up to 7 MB)"
                 />
+                <small className="wallpaper-limit">
+                  JPG, PNG or WebP · up to 7 MB
+                </small>
               </label>
             </details>
             <button
@@ -531,11 +558,7 @@ export default function RoomPanels({
         {panel === "settings" && (
           <>
             <div className="room-detail-icon">
-              {snapshot.room.visibility === "private" ? (
-                <Lock size={28} />
-              ) : (
-                <Hash size={28} />
-              )}
+              <RoomMark room={snapshot.room} />
             </div>
             <h2 className="room-detail-name">{snapshot.room.slug}</h2>
             <p className="room-detail-type">
@@ -543,16 +566,53 @@ export default function RoomPanels({
                 ? "Private, password protected"
                 : "Public, accessible by name or link"}
             </p>
-            <label className="input-label">
-              About this room
-              <textarea
-                value={description}
-                maxLength={240}
-                disabled={!owner}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="A little space for…"
+            {owner && (
+              <RoomLogoPicker
+                emoji={logo}
+                file={logoFile}
+                imageUrl={
+                  !clearLogoImage && snapshot.room.logoImageId
+                    ? "/api/rooms/" +
+                      snapshot.room.slug +
+                      "/logo?v=" +
+                      snapshot.room.logoImageId
+                    : undefined
+                }
+                onEmoji={(e) => {
+                  setLogo(e);
+                  setLogoFile(null);
+                  setClearLogoImage(true);
+                }}
+                onFile={(f) => {
+                  setLogoFile(f);
+                  setClearLogoImage(false);
+                }}
+                onRemove={() => {
+                  setLogoFile(null);
+                  setClearLogoImage(true);
+                }}
+                onError={onError}
               />
-            </label>
+            )}
+            {owner ? (
+              <label className="input-label room-description-editor">
+                About this room
+                <textarea
+                  value={description}
+                  maxLength={240}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="A little space for…"
+                />
+              </label>
+            ) : (
+              <section className="room-description">
+                <h4>About this room</h4>
+                <p>
+                  {snapshot.room.description ||
+                    "A little space for good company."}
+                </p>
+              </section>
+            )}
             <div className="settings-row">
               <div>
                 <strong>Close the door</strong>

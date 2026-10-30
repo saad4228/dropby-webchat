@@ -20,6 +20,7 @@ export const roomSchema = z
     description: z.string().max(240).default(""),
     visibility: z.enum(["public", "private"]),
     password: z.string().max(128).default(""),
+    logo: z.string().min(1).max(12).default("✳"),
   })
   .refine((r) => r.visibility === "public" || r.password.length >= 8, {
     message: "Private rooms need a password of at least 8 characters.",

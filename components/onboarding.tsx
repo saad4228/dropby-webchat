@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { api, avatars, colors, Identity } from "../lib/client";
 import { Avatar } from "./brand";
+import { RoomLogoPicker } from "./room-logo-picker";
+import { emojiGroups } from "../lib/emojis";
 import { Modal } from "./modal";
 export default function Onboarding({
   slug: initial,
@@ -38,6 +40,9 @@ export default function Onboarding({
     [visibility, setVisibility] = useState("public"),
     [password, setPassword] = useState(""),
     [description, setDescription] = useState(""),
+    [logo, setLogo] = useState("✳"),
+    [logoFile, setLogoFile] = useState<File | null>(null),
+    [createdSlug, setCreatedSlug] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [missing, setMissing] = useState(false);
@@ -62,14 +67,24 @@ export default function Onboarding({
             }
           : identity(),
       );
-      if (create)
-        await api("rooms", {
-          slug: slug.trim().toLowerCase().replace(/\s+/g, "-"),
-          description,
-          visibility,
-          password,
-        });
-      else await api("rooms/" + slug + "/join", { password });
+      const normalized = slug.trim().toLowerCase().replace(/\s+/g, "-");
+      if (create) {
+        if (createdSlug !== normalized) {
+          await api("rooms", {
+            slug: normalized,
+            description,
+            visibility,
+            password,
+            logo,
+          });
+          setCreatedSlug(normalized);
+        }
+        if (logoFile) {
+          const form = new FormData();
+          form.append("file", logoFile);
+          await api("rooms/" + normalized + "/logo", form);
+        }
+      } else await api("rooms/" + slug + "/join", { password });
       onJoined(slug.trim().toLowerCase().replace(/\s+/g, "-"), result.user);
     } catch (e: any) {
       setError(e.message);
@@ -105,6 +120,17 @@ export default function Onboarding({
           <span className="section-label">MAKE ROOM FOR YOUR PEOPLE</span>
           <h2>A new little corner.</h2>
           <p>Good things start with a name.</p>
+          <RoomLogoPicker
+            emoji={logo}
+            file={logoFile}
+            onEmoji={(e) => {
+              setLogo(e);
+              setLogoFile(null);
+            }}
+            onFile={setLogoFile}
+            onError={setError}
+            onRemove={() => setLogoFile(null)}
+          />
           <label className="input-label">
             Room name
             <div className="input-with-icon">
@@ -218,22 +244,8 @@ export default function Onboarding({
             <div className="avatar-grid">
               {(tab === "Emoji"
                 ? [
-                    "😊",
-                    "😎",
-                    "🥰",
-                    "🤓",
-                    "👻",
-                    "🤖",
-                    "🫶",
-                    "🦄",
-                    "🍒",
-                    "🥑",
-                    "🍕",
-                    "☕",
-                    "🧿",
-                    "🌈",
-                    "🪩",
-                    "💫",
+                    ...emojiGroups[0].emojis.slice(0, 40),
+                    ...emojiGroups[2].emojis.slice(0, 24),
                   ]
                 : avatars
               ).map((a) => (

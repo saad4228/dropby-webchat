@@ -32,7 +32,17 @@ import {
   LoaderCircle,
   Volume2,
 } from "lucide-react";
-import { api, Identity, Snapshot, Message as Msg, colors } from "../lib/client";
+import {
+  api,
+  parseApiResponse,
+  Identity,
+  Snapshot,
+  Message as Msg,
+  colors,
+} from "../lib/client";
+import { loadAppearance, saveAppearance } from "../lib/appearance-store";
+import { EmojiPicker } from "./emoji-picker";
+import { RoomMark } from "./room-mark";
 import { Brand, Avatar } from "./brand";
 import Message from "./message";
 import RoomPanels, { Appearance, defaultAppearance } from "./room-panels";
@@ -51,6 +61,7 @@ export function demoSnapshot(user: Identity): Snapshot {
       owner: "aarav",
       theme: "alpine",
       locked: false,
+      logo: "⚽",
     },
     role: "member",
     members: [
@@ -210,6 +221,7 @@ export default function Chat({
     [emoji, setEmoji] = useState(false),
     [viewer, setViewer] = useState<Msg | null>(null),
     [appearance, setAppearance] = useState<Appearance>(defaultAppearance),
+    [wallpaperUrl, setWallpaperUrl] = useState(""),
     [recording, setRecording] = useState(false),
     [paused, setPaused] = useState(false),
     [recordSeconds, setRecordSeconds] = useState(0),
@@ -231,6 +243,7 @@ export default function Chat({
     nearBottom = useRef(true),
     firstLoad = useRef(true);
   const activeCall = useRef(false);
+  const appearanceTouched = useRef(false);
   const notify = useCallback((message: string) => {
     if (message.startsWith("OPEN:")) setPanel(message.slice(5));
     else setError(message);
@@ -272,22 +285,53 @@ export default function Chat({
     };
   }, [refresh]);
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("dropby-appearance:" + slug);
-      if (stored)
-        setAppearance({ ...defaultAppearance, ...JSON.parse(stored) });
-    } catch {}
+    let live = true;
+    appearanceTouched.current = false;
+    loadAppearance(slug).then((saved) => {
+      if (live && !appearanceTouched.current)
+        setAppearance({ ...defaultAppearance, ...saved });
+    });
+    return () => {
+      live = false;
+    };
   }, [slug]);
   function changeAppearance(a: Appearance) {
+    appearanceTouched.current = true;
     setAppearance(a);
-    try {
-      localStorage.setItem("dropby-appearance:" + slug, JSON.stringify(a));
-    } catch {
+    saveAppearance(slug, a).catch(() =>
       notify(
-        "This wallpaper is too large to save. It is applied for this visit.",
-      );
-    }
+        "Your browser could not save this appearance. It is applied for this visit.",
+      ),
+    );
   }
+  useEffect(() => {
+    let live = true,
+      url = "";
+    if (!appearance.background) {
+      setWallpaperUrl("");
+      return;
+    }
+    if (!appearance.background.startsWith("data:image/")) {
+      setWallpaperUrl(appearance.background);
+      return;
+    }
+    // CSS custom properties reject multi-megabyte data URLs. Render a short
+    // object URL while retaining the original image in IndexedDB.
+    fetch(appearance.background)
+      .then((r) => r.blob())
+      .then((blob) => {
+        if (!live) return;
+        url = URL.createObjectURL(blob);
+        setWallpaperUrl(url);
+      })
+      .catch(() =>
+        notify("This wallpaper could not be opened. Choose another image."),
+      );
+    return () => {
+      live = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [appearance.background, notify]);
   useEffect(() => {
     if (initialScroll.current || nearBottom.current) {
       bottom.current?.scrollIntoView({
@@ -523,8 +567,7 @@ export default function Chat({
     xhr.onload = () => {
       setUploadProgress(-1);
       try {
-        const result = JSON.parse(xhr.responseText);
-        if (xhr.status >= 400) throw new Error(result.error);
+        const result = parseApiResponse(xhr.responseText, xhr.status);
         setUpload(result.attachment);
         input.current?.focus();
       } catch (e: any) {
@@ -627,8 +670,7 @@ export default function Chat({
     custom["--received"] = appearance.received;
     custom["--received-text"] = contrast(appearance.received);
   }
-  if (appearance.background)
-    custom["--custom-wallpaper"] = `url("${appearance.background}")`;
+  if (wallpaperUrl) custom["--custom-wallpaper"] = `url("${wallpaperUrl}")`;
   return (
     <div
       className={"chat-app theme-" + theme}
@@ -642,7 +684,11 @@ export default function Chat({
       <div className="chat-scenery" />
       <header className="room-header">
         <button className="room-home" aria-label="Back to home" onClick={leave}>
-          <MessageCircle fill="currentColor" size={27} strokeWidth={0} />
+          {data ? (
+            <RoomMark room={data.room} />
+          ) : (
+            <MessageCircle fill="currentColor" size={27} strokeWidth={0} />
+          )}
         </button>
         <button className="room-title" onClick={() => togglePanel("settings")}>
           <strong>
@@ -772,7 +818,9 @@ export default function Chat({
           ) : (
             <>
               <div className="room-welcome">
-                <span className="room-welcome-icon">{demo ? "⚽" : "✳"}</span>
+                <span className="room-welcome-icon">
+                  <RoomMark room={data.room} />
+                </span>
                 <span className="section-label">
                   {demo
                     ? "MATCH NIGHT. GOOD COMPANY."
@@ -1102,46 +1150,14 @@ export default function Chat({
             </div>
           )}
           {emoji && (
-            <div className="composer-emoji">
-              {[
-                "👋",
-                "❤️",
-                "😂",
-                "😍",
-                "🔥",
-                "✨",
-                "🎉",
-                "⚽",
-                "🍿",
-                "🌿",
-                "☕",
-                "👀",
-                "🙌",
-                "💙",
-                "🥰",
-                "😎",
-                "🤔",
-                "👍",
-                "🫶",
-                "🌈",
-                "💫",
-                "🌻",
-                "🥳",
-                "😊",
-              ].map((e) => (
-                <button
-                  key={e}
-                  aria-label={"Insert " + e}
-                  onClick={() => {
-                    setText((t) => t + e);
-                    setEmoji(false);
-                    input.current?.focus();
-                  }}
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
+            <EmojiPicker
+              onClose={() => setEmoji(false)}
+              onSelect={(e) => {
+                setText((t) => t + e);
+                setEmoji(false);
+                input.current?.focus();
+              }}
+            />
           )}
           <div className="composer-hint">
             <span>

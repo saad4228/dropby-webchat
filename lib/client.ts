@@ -1,3 +1,29 @@
+export function parseApiResponse(text: string, status: number) {
+  let data: any;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    const message =
+      status === 413
+        ? "This upload is too large. Choose a file up to 15 MB."
+        : status === 429
+          ? "A little too fast. Please wait a moment."
+          : status >= 500
+            ? "The server could not finish this request. Please try again."
+            : "The server returned an unexpected response. Please try again.";
+    throw Object.assign(new Error(message), { status });
+  }
+  if (status >= 400)
+    throw Object.assign(
+      new Error(
+        typeof data.error === "string"
+          ? data.error
+          : "This request could not be completed. Please try again.",
+      ),
+      { status },
+    );
+  return data;
+}
 export async function api(path: string, body?: unknown, method?: string) {
   const res = await fetch("/api/" + path, {
     method: method || (body ? "POST" : "GET"),
@@ -11,12 +37,7 @@ export async function api(path: string, body?: unknown, method?: string) {
     body:
       body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
   });
-  const data: any = await res.json();
-  if (!res.ok)
-    throw Object.assign(new Error(data.error || "Request failed"), {
-      status: res.status,
-    });
-  return data;
+  return parseApiResponse(await res.text(), res.status);
 }
 export type Identity = {
   id: string;
@@ -56,6 +77,8 @@ export type Room = {
   theme: string;
   owner: string;
   locked: boolean;
+  logo?: string;
+  logoImageId?: string | null;
 };
 export type Snapshot = {
   room: Room;
