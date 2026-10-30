@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Brand, Avatar, Footer } from "./brand";
 import { useState } from "react";
+import { Modal } from "./modal";
 export function DemoChat({
   theme = "alpine",
   onOpen,
@@ -165,6 +166,7 @@ export default function Home({
   const [slug, setSlug] = useState("");
   const [error, setError] = useState("");
   const [theme, setTheme] = useState("alpine");
+  const [joinPrompt, setJoinPrompt] = useState(false);
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const s = slug.trim().toLowerCase().replace(/\s+/g, "-");
@@ -176,6 +178,7 @@ export default function Home({
       setError("Enter a room name with 3–48 letters, numbers or hyphens.");
       return;
     }
+    setJoinPrompt(false);
     onJoin(s);
   }
   return (
@@ -198,7 +201,10 @@ export default function Home({
           </button>
           <button
             className="nav-join"
-            onClick={() => document.getElementById("room-name")?.focus()}
+            onClick={() => {
+              setError("");
+              setJoinPrompt(true);
+            }}
           >
             Join a room <ArrowUpRight size={16} />
           </button>
@@ -426,6 +432,42 @@ export default function Home({
       <div className="bottom-signature">
         A place to drop by. A reason to stay.
       </div>
+      {joinPrompt && (
+        <Modal className="join-room-modal" onClose={() => setJoinPrompt(false)}>
+          <span className="section-label">YOUR PEOPLE ARE A ROOM AWAY</span>
+          <h2>Join a room.</h2>
+          <p>Enter the room name or use the name from your invitation.</p>
+          <form onSubmit={submit}>
+            <label className="input-label">
+              Room name
+              <div className="input-with-icon">
+                <Hash size={18} />
+                <input
+                  aria-label="Room to join"
+                  data-autofocus
+                  placeholder="e.g. football-night"
+                  value={slug}
+                  onChange={(e) => {
+                    setSlug(e.target.value);
+                    setError("");
+                  }}
+                  maxLength={48}
+                  aria-describedby={error ? "join-dialog-error" : undefined}
+                />
+              </div>
+            </label>
+            {error && (
+              <p id="join-dialog-error" role="alert" className="field-error">
+                {error}
+              </p>
+            )}
+            <button type="submit" className="primary full">
+              Continue to room <ArrowRight size={16} />
+            </button>
+          </form>
+          <small>You can join with a nickname. No account needed.</small>
+        </Modal>
+      )}
     </div>
   );
 }

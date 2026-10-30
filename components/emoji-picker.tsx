@@ -12,6 +12,7 @@ export function EmojiPicker({
   const [group, setGroup] = useState(0),
     [search, setSearch] = useState("");
   const close = useRef(onClose);
+  const container = useRef<HTMLDivElement>(null);
   close.current = onClose;
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -21,7 +22,19 @@ export function EmojiPicker({
       }
     };
     document.addEventListener("keydown", key);
-    return () => document.removeEventListener("keydown", key);
+    const outside = (e: PointerEvent) => {
+      const target = e.target as Element;
+      if (
+        !container.current?.contains(target) &&
+        !target.closest(".emoji-toggle")
+      )
+        close.current();
+    };
+    document.addEventListener("pointerdown", outside);
+    return () => {
+      document.removeEventListener("keydown", key);
+      document.removeEventListener("pointerdown", outside);
+    };
   }, []);
   const matches = search.trim()
     ? emojiGroups
@@ -35,7 +48,12 @@ export function EmojiPicker({
       ? allEmojis.filter((e) => e.includes(search.trim()))
       : matches;
   return (
-    <div className="emoji-picker" role="dialog" aria-label="Emoji picker">
+    <div
+      ref={container}
+      className="emoji-picker"
+      role="dialog"
+      aria-label="Emoji picker"
+    >
       <header>
         <strong>A little expression</strong>
         <button onClick={onClose} aria-label="Close emoji picker">

@@ -1,0 +1,226 @@
+/* Browser-owned form states and secondary text use the active appearance. */
+:root {
+  color-scheme: light;
+  --input-fill: #f3f6fc;
+  --input-ink: #26354b;
+  --home-secondary: #3f526b;
+  --home-muted: #52627a;
+  --home-link: #2955a6;
+  --home-soft-heading: #526781;
+  --panel-action-bg: #eaf0ff;
+  --panel-action-ink: #354c80;
+  --panel-action-border: #bdcdec;
+}
+[data-mode="dark"] {
+  color-scheme: dark;
+  --input-fill: #34435c;
+  --input-ink: #eef4ff;
+  --home-secondary: #e0e9f8;
+  --home-muted: #c5d3e8;
+  --home-link: #bed2ff;
+  --home-soft-heading: #d3e1f8;
+  --panel-action-bg: #354c70;
+  --panel-action-ink: #f0f5ff;
+  --panel-action-border: #7892ba;
+}
+input,
+textarea,
+select {
+  caret-color: var(--input-ink);
+}
+input:is(:-webkit-autofill, :autofill),
+input:is(:-webkit-autofill, :autofill):hover,
+input:is(:-webkit-autofill, :autofill):focus,
+textarea:is(:-webkit-autofill, :autofill),
+select:is(:-webkit-autofill, :autofill) {
+  -webkit-box-shadow: 0 0 0 1000px var(--input-fill) inset !important;
+  box-shadow: 0 0 0 1000px var(--input-fill) inset !important;
+  -webkit-text-fill-color: var(--input-ink) !important;
+  caret-color: var(--input-ink);
+  border-radius: 8px;
+}
+.room-input input {
+  color: var(--input-ink);
+  -webkit-text-fill-color: var(--input-ink);
+  border-radius: 8px;
+  padding: 0 7px;
+  margin-left: -7px;
+}
+.room-input input::placeholder {
+  -webkit-text-fill-color: initial;
+  color: var(--home-muted);
+  opacity: 1;
+}
+.room-input:focus-within {
+  box-shadow:
+    0 0 0 2px #7c9aec55,
+    0 7px 22px #384a6a12;
+}
+.homepage .hero-description,
+.homepage .make-yours p,
+.homepage .feature-strip p,
+.homepage .steps p,
+.homepage .creator-section p {
+  color: var(--home-secondary);
+  text-shadow: 0 1px 1px #ffffff50;
+}
+.homepage .hero h1 > span {
+  color: var(--home-soft-heading);
+}
+.homepage .eyebrow,
+.homepage .section-label,
+.homepage .hero-assurances,
+.homepage .create-line,
+.homepage .theme-samples > span,
+.homepage .demo-label,
+.homepage .nav-links,
+.homepage footer > span,
+.homepage footer > div,
+.homepage .bottom-signature {
+  color: var(--home-muted);
+}
+.homepage .create-line button,
+.homepage .text-link,
+.homepage .creator-section > button {
+  color: var(--home-link);
+  font-weight: 600;
+}
+.homepage .hero-assurances svg {
+  color: var(--home-muted);
+}
+.homepage .feature-strip h3,
+.homepage .steps h3 {
+  color: var(--ink);
+}
+.homepage .floating-note,
+.homepage .note-bottom > div {
+  color: var(--home-secondary);
+}
+.homepage .theme-sticker {
+  background: var(--floating-bg);
+  color: var(--home-secondary);
+  border: 1px solid #a5b5d130;
+}
+.homepage .theme-sticker svg {
+  color: var(--home-link);
+}
+.homepage .steps > div > span,
+.homepage .mini-room > small,
+.homepage .mini-room > div {
+  color: var(--home-muted);
+}
+.room-panel .input-label,
+.room-panel .settings-row strong,
+.room-panel .room-description h4,
+.join-room-modal .input-label {
+  color: var(--home-secondary);
+}
+.room-panel .settings-row small,
+.room-panel .panel-note,
+.join-room-modal input::placeholder {
+  color: var(--home-muted);
+  opacity: 1;
+}
+.homepage .note-bottom small,
+.homepage .demo-chat header > div > span,
+.homepage .demo-msg label span,
+.homepage .date-label {
+  color: var(--home-muted);
+}
+[data-mode="dark"] .homepage .home-scenery {
+  background:
+    linear-gradient(180deg, #1b293fb8, #202c42d6),
+    url("/alpine.jpg") center 44% / cover no-repeat;
+}
+[data-mode="dark"] .homepage .hero-description,
+[data-mode="dark"] .homepage .make-yours p,
+[data-mode="dark"] .homepage .feature-strip p,
+[data-mode="dark"] .homepage .steps p,
+[data-mode="dark"] .homepage .creator-section p {
+  text-shadow: 0 1px 3px #14203880;
+}
+.room-panel .reports-button {
+  background: var(--panel-action-bg);
+  border: 1px solid var(--panel-action-border);
+  color: var(--panel-action-ink);
+  justify-content: center;
+  min-height: 44px;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 9px;
+  box-shadow: none;
+}
+.room-panel .reports-button > svg {
+  margin: 0;
+  color: currentColor;
+}
+.room-panel .reports-button:hover {
+  background: #dfe8ff;
+  border-color: #95afe0;
+}
+[data-mode="dark"] .room-panel .reports-button:hover {
+  background: #435d86;
+  border-color: #9db4d7;
+}
+.room-panel .reports-button:focus-visible {
+  outline: 3px solid #97b6f3;
+  outline-offset: 3px;
+}
+.room-panel .room-description-editor > textarea::placeholder {
+  color: var(--home-muted);
+  opacity: 1;
+}
+.join-room-modal {
+  padding: 34px;
+  max-width: 420px;
+}
+.join-room-modal > .section-label {
+  font-size: 8px;
+  margin: 12px 0 13px;
+  color: var(--home-muted);
+}
+.join-room-modal h2 {
+  font-size: 27px;
+  margin: 0;
+  line-height: 1.3;
+}
+.join-room-modal > p {
+  font-size: 12px;
+  line-height: 1.9;
+  margin: 15px 0 24px;
+  color: var(--home-secondary);
+}
+.join-room-modal .input-label {
+  margin-bottom: 22px;
+}
+.join-room-modal .input-with-icon {
+  background: var(--input-fill);
+  color: var(--input-ink);
+}
+.join-room-modal .input-with-icon input {
+  color: var(--input-ink);
+}
+.join-room-modal .field-error {
+  font-size: 11px;
+  margin: -7px 0 16px;
+  color: #ad405e;
+}
+[data-mode="dark"] .join-room-modal .field-error {
+  color: #ffabbc;
+}
+.join-room-modal > small {
+  display: block;
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.8;
+  color: var(--home-muted);
+  margin-top: 17px;
+}
+@media (max-width: 600px) {
+  .join-room-modal {
+    padding: 28px;
+  }
+  .join-room-modal h2 {
+    font-size: 25px;
+  }
+}

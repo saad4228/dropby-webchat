@@ -86,7 +86,7 @@ npx playwright test
 npm run build
 ```
 
-The API suite uses independent cookie jars and covers 31 room, logo authorization, privacy, messaging, idempotency, permission, reaction, media range, moderation, signaling, CSRF, session and optional account scenarios. Nine unit tests verify SFU tokens/capacities, upload error handling, image limits and signature checks. Five browser journeys cover onboarding, two-user conversations, actual peer calls with synthetic media, mobile/dark layouts, large image and logo uploads, wallpaper persistence, emoji selection and room details. Screenshots are stored in ignored `outputs/`.
+The API suite uses independent cookie jars and covers 31 room, logo authorization, privacy, messaging, idempotency, permission, reaction, media range, moderation, signaling, CSRF, session and optional account scenarios. Nine unit tests verify SFU tokens/capacities, upload error handling, image limits and signature checks. Ten browser journeys cover onboarding, two-user conversations, actual peer calls with synthetic media, mobile/dark layouts, large image and logo uploads, wallpaper persistence, repeated emoji/reaction selections, navigation joining, native autofill appearance, text/button contrast and room details. Screenshots are stored in ignored `outputs/`.
 
 The default Playwright configuration uses installed Windows Chrome; set `PLAYWRIGHT_CHROME_PATH` to another Chrome/Chromium executable on a different host. Tests use synthetic microphone/camera devices. They do not prove real hardware quality, Safari/Firefox compatibility or connectivity across all NAT/firewall combinations. Browser permissions and device/network behavior require manual cross-browser testing.
 

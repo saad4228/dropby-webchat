@@ -1154,8 +1154,6 @@ export default function Chat({
               onClose={() => setEmoji(false)}
               onSelect={(e) => {
                 setText((t) => t + e);
-                setEmoji(false);
-                input.current?.focus();
               }}
             />
           )}

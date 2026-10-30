@@ -339,7 +339,6 @@ export default function Message({
                 onSelect={(e) => {
                   onAction("reaction", m, e);
                   setMenu(false);
-                  setReact(false);
                 }}
               />
             ) : (

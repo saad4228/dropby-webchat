@@ -20,9 +20,10 @@ export function Modal({
     const el = ref.current;
     const timer = setTimeout(
       () =>
-        el
-          ?.querySelector<HTMLElement>("input,button,textarea,select,a[href]")
-          ?.focus(),
+        (
+          el?.querySelector<HTMLElement>("[data-autofocus]") ||
+          el?.querySelector<HTMLElement>("input,button,textarea,select,a[href]")
+        )?.focus(),
       30,
     );
     const key = (e: KeyboardEvent) => {

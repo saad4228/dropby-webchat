@@ -644,7 +644,7 @@ export default function RoomPanels({
             {mod && (
               <>
                 <button
-                  className="panel-invite"
+                  className="panel-invite reports-button"
                   onClick={async () => {
                     try {
                       setReports(
