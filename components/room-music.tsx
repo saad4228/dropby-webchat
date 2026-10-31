@@ -24,7 +24,9 @@ import {
   musicPosition,
   musicTime,
   type MusicSnapshot,
+  type MusicPlaybackUpdate,
 } from "../lib/music";
+import { playbackCorrection, musicClockOffset } from "../lib/music-sync";
 import { MAX_FILE_BYTES } from "../lib/upload-limits";
 
 async function fileDuration(file: File) {
@@ -112,7 +114,9 @@ export default function RoomMusic({
     [blocked, setBlocked] = useState(false),
     [position, setPosition] = useState(0),
     [seek, setSeek] = useState<number | null>(null),
-    [ready, setReady] = useState(false);
+    [ready, setReady] = useState(false),
+    [preparing, setPreparing] = useState(false),
+    [audioLoadAttempt, setAudioLoadAttempt] = useState(0);
   const audio = useRef<HTMLAudioElement>(null),
     root = useRef<HTMLDivElement>(null),
     file = useRef<HTMLInputElement>(null),
@@ -120,6 +124,7 @@ export default function RoomMusic({
     clock = useRef(0),
     requestSeq = useRef(0),
     latestSeq = useRef(0),
+    latestFullSeq = useRef(0),
     active = useRef(true),
     localDecision = useRef(""),
     dataRef = useRef(data),
@@ -127,7 +132,30 @@ export default function RoomMusic({
     blockedRef = useRef(blocked),
     offsetReady = useRef(false),
     polling = useRef(false),
-    pollError = useRef("");
+    pollError = useRef(""),
+    fastPolling = useRef(false),
+    preparedTrack = useRef(""),
+    appliedRevision = useRef(""),
+    lastHardSeek = useRef(-Infinity),
+    playPending = useRef(false),
+    startProbe = useRef<{ trackId: string; baseline: number } | null>(null),
+    scrubbing = useRef(false),
+    previewPosition = useRef<number | null>(null),
+    seekGeneration = useRef(0),
+    seekInFlight = useRef(false),
+    queuedSeek = useRef<{
+      position: number;
+      trackId: string;
+      at: number;
+      generation: number;
+    } | null>(null),
+    localSeek = useRef<{
+      position: number;
+      trackId: string;
+      at: number;
+      generation: number;
+      playing: boolean;
+    } | null>(null);
   dataRef.current = data;
   acceptedRef.current = accepted;
   blockedRef.current = blocked;
@@ -138,23 +166,62 @@ export default function RoomMusic({
       role === "moderator") &&
     !restricted;
   const receive = useCallback(
-    (next: MusicSnapshot, started: number, seq: number) => {
-      if (!active.current || seq < latestSeq.current) return;
-      latestSeq.current = seq;
-      const estimate = next.serverNow - (started + Date.now()) / 2;
+    (
+      next: MusicSnapshot | MusicPlaybackUpdate,
+      started: number,
+      seq: number,
+    ) => {
+      if (
+        !active.current ||
+        next.state.revision < (dataRef.current?.state.revision ?? 0)
+      )
+        return;
+      if (
+        !("queue" in next) &&
+        seq < latestSeq.current &&
+        next.state.revision === (dataRef.current?.state.revision ?? 0)
+      )
+        return;
+      if ("queue" in next) {
+        if (
+          seq < latestFullSeq.current &&
+          next.state.revision === (dataRef.current?.state.revision ?? 0)
+        )
+          return;
+        latestFullSeq.current = Math.max(latestFullSeq.current, seq);
+      }
+      latestSeq.current = Math.max(latestSeq.current, seq);
+      const estimate = musicClockOffset(
+        started,
+        Date.now(),
+        next.serverReceivedAt,
+        next.serverNow,
+      );
       clock.current = offsetReady.current
         ? clock.current * 0.7 + estimate * 0.3
         : estimate;
       offsetReady.current = true;
-      setData(next);
+      const merged =
+        "queue" in next
+          ? next
+          : dataRef.current
+            ? {
+                ...dataRef.current,
+                state: next.state,
+                serverNow: next.serverNow,
+              }
+            : null;
+      if (!merged) return;
+      dataRef.current = merged;
+      setData(merged);
       setReady(true);
       if (
         !localDecision.current &&
-        next.ownChoice?.trackId === next.current?.id &&
-        next.ownChoice?.response === "accepted"
+        merged.ownChoice?.trackId === merged.current?.id &&
+        merged.ownChoice?.response === "accepted"
       )
-        setAccepted(next.current!.id);
-      if (localDecision.current && localDecision.current !== next.current?.id)
+        setAccepted(merged.current!.id);
+      if (localDecision.current && localDecision.current !== merged.current?.id)
         localDecision.current = "";
     },
     [],
@@ -188,6 +255,30 @@ export default function RoomMusic({
       polling.current = false;
     }
   }, [slug, demo, receive]);
+  useEffect(() => {
+    const update = async () => {
+      const d = dataRef.current;
+      if (demo || !d?.current || fastPolling.current) return;
+      fastPolling.current = true;
+      const started = Date.now(),
+        seq = ++requestSeq.current;
+      try {
+        receive(
+          await api(
+            "rooms/" + slug + "/music?playback=1&revision=" + d.state.revision,
+          ),
+          started,
+          seq,
+        );
+      } catch (e: any) {
+        if (e.status === 401 || e.status === 403) refresh();
+      } finally {
+        fastPolling.current = false;
+      }
+    };
+    const timer = setInterval(update, 350);
+    return () => clearInterval(timer);
+  }, [slug, demo, receive, refresh]);
   useEffect(() => {
     active.current = true;
     const player = audio.current;
@@ -251,10 +342,24 @@ export default function RoomMusic({
     const d = dataRef.current,
       a = audio.current;
     if (!d || !a) return;
+    const intent =
+      localSeek.current?.trackId === d.current?.id ? localSeek.current : null;
+    const state = intent
+      ? {
+          ...d.state,
+          position: intent.position,
+          updatedAt: intent.at,
+          playing: intent.playing,
+        }
+      : d.state;
     const target = d.current
-      ? musicPosition(d.state, d.current.duration, Date.now() + clock.current)
+      ? musicPosition(state, d.current.duration, Date.now() + clock.current)
       : 0;
-    setPosition(target);
+    setPosition(
+      scrubbing.current && previewPosition.current !== null
+        ? previewPosition.current
+        : target,
+    );
     if (!d.current || acceptedRef.current !== d.current.id) {
       a.pause();
       if (a.getAttribute("src")) {
@@ -263,43 +368,141 @@ export default function RoomMusic({
       }
       return;
     }
-    const source = "/api/media/" + d.current.attachmentId;
-    if (a.getAttribute("src") !== source) {
-      a.src = source;
-      a.load();
-    }
-    if (a.readyState >= 1) {
+    if (preparedTrack.current !== d.current.id || !a.getAttribute("src"))
+      return;
+    if (!scrubbing.current && !intent) {
       const drift = target - a.currentTime;
-      if (Math.abs(drift) > 0.85) {
+      const revision = d.current.id + ":" + d.state.revision;
+      const correction = playbackCorrection({
+        drift,
+        revisionChanged: appliedRevision.current !== revision,
+        seeking: a.seeking,
+        readyState: a.readyState,
+        sinceSeek: performance.now() - lastHardSeek.current,
+      });
+      if (correction.seek) {
         try {
           a.currentTime = target;
+          if (startProbe.current?.trackId === d.current.id)
+            startProbe.current.baseline = target;
+          lastHardSeek.current = performance.now();
         } catch {}
       }
-      a.playbackRate = Math.abs(drift) > 0.2 ? (drift > 0 ? 1.04 : 0.96) : 1;
+      if ((a.readyState >= 3 && !a.seeking) || correction.seek)
+        appliedRevision.current = revision;
+      if (a.playbackRate !== correction.rate) a.playbackRate = correction.rate;
     }
-    if (d.state.playing && target < d.current.duration) {
-      if (a.paused && !blockedRef.current)
-        a.play().catch((e) => {
-          if (
-            e.name !== "AbortError" &&
-            active.current &&
-            dataRef.current?.current?.id === d.current?.id &&
-            dataRef.current?.state.playing
-          ) {
-            blockedRef.current = true;
-            setBlocked(true);
-          }
-        });
+    if (
+      startProbe.current?.trackId === d.current.id &&
+      !a.paused &&
+      !a.seeking &&
+      a.currentTime > startProbe.current.baseline + 0.04
+    ) {
+      startProbe.current = null;
+      setPreparing(false);
+      if (
+        !intent &&
+        !scrubbing.current &&
+        Math.abs(target - a.currentTime) > 0.12
+      ) {
+        a.currentTime = target;
+        lastHardSeek.current = performance.now();
+        appliedRevision.current = d.current.id + ":" + d.state.revision;
+      }
+    }
+    if (state.playing && target < d.current.duration) {
+      if (
+        a.paused &&
+        a.readyState >= 3 &&
+        !blockedRef.current &&
+        !playPending.current
+      ) {
+        playPending.current = true;
+        a.play()
+          .catch((e) => {
+            if (
+              e.name !== "AbortError" &&
+              active.current &&
+              dataRef.current?.current?.id === d.current?.id &&
+              dataRef.current?.state.playing
+            ) {
+              blockedRef.current = true;
+              setBlocked(true);
+            }
+          })
+          .finally(() => {
+            playPending.current = false;
+          });
+      }
     } else {
       a.pause();
       a.playbackRate = 1;
+      if (startProbe.current) setPreparing(false);
     }
   }, []);
   useEffect(() => {
     sync();
-    const timer = setInterval(sync, 500);
+    const timer = setInterval(sync, 200);
     return () => clearInterval(timer);
   }, [sync, data, accepted]);
+  useEffect(() => {
+    const current = data?.current,
+      a = audio.current;
+    if (!current || accepted !== current.id || !a) return;
+    const controller = new AbortController();
+    let objectUrl = "";
+    preparedTrack.current = "";
+    appliedRevision.current = "";
+    startProbe.current = { trackId: current.id, baseline: 0 };
+    playPending.current = false;
+    a.pause();
+    a.removeAttribute("src");
+    a.load();
+    setPreparing(true);
+    fetch("/api/media/" + current.attachmentId, {
+      credentials: "same-origin",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok)
+          throw new Error(
+            response.status === 403
+              ? "Your access to this song ended."
+              : "Could not prepare this song. Tap Enable sound to retry.",
+          );
+        return response.blob();
+      })
+      .then((blob) => {
+        if (controller.signal.aborted || !active.current) return;
+        objectUrl = URL.createObjectURL(blob);
+        preparedTrack.current = current.id;
+        a.src = objectUrl;
+        a.load();
+        if (!dataRef.current?.state.playing) setPreparing(false);
+      })
+      .catch((e) => {
+        if (
+          e.name !== "AbortError" &&
+          !controller.signal.aborted &&
+          active.current
+        ) {
+          setPreparing(false);
+          blockedRef.current = true;
+          setBlocked(true);
+          setError(e.message);
+        }
+      });
+    return () => {
+      controller.abort();
+      if (objectUrl && a.getAttribute("src") === objectUrl) {
+        a.pause();
+        a.removeAttribute("src");
+        a.load();
+      }
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      preparedTrack.current = "";
+    };
+  }, [data?.current?.attachmentId, accepted, audioLoadAttempt]);
   useEffect(() => {
     setBlocked(false);
     blockedRef.current = false;
@@ -327,6 +530,79 @@ export default function RoomMusic({
       setSeek(null);
     }
   }
+  function previewSeek(value: number) {
+    previewPosition.current = value;
+    setSeek(value);
+    setPosition(value);
+    const a = audio.current;
+    if (
+      a &&
+      a.readyState >= 1 &&
+      acceptedRef.current === dataRef.current?.current?.id
+    ) {
+      a.currentTime = value;
+      a.playbackRate = 1;
+      lastHardSeek.current = performance.now();
+    }
+  }
+  async function commitSeek(value: number) {
+    const d = dataRef.current;
+    if (!d?.current || !canControl) return;
+    scrubbing.current = false;
+    previewPosition.current = null;
+    const generation = ++seekGeneration.current,
+      at = Date.now() + clock.current;
+    const job = { position: value, trackId: d.current.id, at, generation };
+    localSeek.current = { ...job, playing: d.state.playing };
+    queuedSeek.current = job;
+    setSeek(null);
+    setPosition(value);
+    if (seekInFlight.current) return;
+    seekInFlight.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      while (queuedSeek.current && active.current) {
+        const next = queuedSeek.current;
+        queuedSeek.current = null;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const latest = dataRef.current;
+          if (latest?.current?.id !== next.trackId) break;
+          try {
+            await command({
+              action: "seek",
+              position: next.position,
+              trackId: next.trackId,
+              at: next.at,
+              revision: latest.state.revision,
+            });
+            break;
+          } catch (e: any) {
+            if (e.status === 409 && attempt === 0) {
+              const started = Date.now(),
+                seq = ++requestSeq.current;
+              receive(await api("rooms/" + slug + "/music"), started, seq);
+              continue;
+            }
+            throw e;
+          }
+        }
+        if (localSeek.current?.generation === next.generation)
+          localSeek.current = null;
+      }
+    } catch (e: any) {
+      queuedSeek.current = null;
+      localSeek.current = null;
+      appliedRevision.current = "";
+      setError(e.message);
+      refresh();
+    } finally {
+      seekInFlight.current = false;
+      setBusy(false);
+      setSeek(null);
+      sync();
+    }
+  }
   async function choose(
     response: "accepted" | "declined",
     changeRequested = false,
@@ -339,23 +615,6 @@ export default function RoomMusic({
       acceptedRef.current = current.id;
       setBlocked(false);
       blockedRef.current = false;
-      const a = audio.current;
-      if (a && a.getAttribute("src") !== "/api/media/" + current.attachmentId) {
-        a.src = "/api/media/" + current.attachmentId;
-        a.load();
-        if (data?.state.playing)
-          a.play().catch((e) => {
-            if (
-              e.name !== "AbortError" &&
-              active.current &&
-              dataRef.current?.current?.id === current.id &&
-              dataRef.current?.state.playing
-            ) {
-              blockedRef.current = true;
-              setBlocked(true);
-            }
-          });
-      }
     } else {
       setAccepted("");
       acceptedRef.current = "";
@@ -407,6 +666,10 @@ export default function RoomMusic({
   function enableAudio() {
     blockedRef.current = false;
     setBlocked(false);
+    if (!audio.current?.getAttribute("src")) {
+      setAudioLoadAttempt((v) => v + 1);
+      return;
+    }
     audio.current
       ?.play()
       .then(sync)
@@ -429,9 +692,11 @@ export default function RoomMusic({
       ? joined
         ? blocked
           ? "Tap to enable sound"
-          : data?.state.playing
-            ? "Listening together"
-            : "Paused together"
+          : preparing
+            ? "Preparing your audio…"
+            : data?.state.playing
+              ? "Listening together"
+              : "Paused together"
         : choice?.response === "declined"
           ? "You passed this song"
           : "A song is waiting for you"
@@ -450,12 +715,13 @@ export default function RoomMusic({
     >
       <audio
         ref={audio}
-        preload="metadata"
+        preload="auto"
         aria-label="Room music audio"
         onLoadedMetadata={sync}
         onCanPlay={sync}
         onError={() => {
           if (audio.current?.getAttribute("src")) {
+            setPreparing(false);
             blockedRef.current = true;
             setBlocked(true);
             setError(
@@ -599,13 +865,26 @@ export default function RoomMusic({
                             ((seek ?? position) / current.duration) * 100 + "%",
                         } as React.CSSProperties
                       }
-                      disabled={!canControl || busy}
-                      onChange={(e) => setSeek(Number(e.target.value))}
+                      disabled={!canControl || (busy && !seekInFlight.current)}
+                      onPointerDown={(e) => {
+                        scrubbing.current = true;
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                      }}
+                      onChange={(e) => previewSeek(Number(e.target.value))}
                       onPointerUp={(e) =>
-                        control("seek", {
-                          position: Number(e.currentTarget.value),
-                        })
+                        commitSeek(Number(e.currentTarget.value))
                       }
+                      onPointerCancel={() => {
+                        scrubbing.current = false;
+                        previewPosition.current = null;
+                        setSeek(null);
+                        appliedRevision.current = "";
+                        sync();
+                      }}
+                      onBlur={() => {
+                        if (previewPosition.current !== null)
+                          commitSeek(previewPosition.current);
+                      }}
                       onKeyUp={(e) => {
                         if (
                           [
@@ -617,9 +896,7 @@ export default function RoomMusic({
                             "PageDown",
                           ].includes(e.key)
                         )
-                          control("seek", {
-                            position: Number(e.currentTarget.value),
-                          });
+                          commitSeek(Number(e.currentTarget.value));
                       }}
                     />
                     <div>
@@ -627,6 +904,12 @@ export default function RoomMusic({
                       <time>{musicTime(current.duration)}</time>
                     </div>
                   </div>
+                  {joined && preparing && (
+                    <p className="music-uploading" role="status">
+                      <LoaderCircle size={14} className="spin" />
+                      Preparing audio for smooth playback…
+                    </p>
+                  )}
                   {!joined ? (
                     <div className="music-invitation">
                       <p>

@@ -89,14 +89,18 @@ test("People opt in to synchronized MP3 and video audio, with personal and share
         .evaluate((a: HTMLAudioElement) => !a.paused && a.currentTime > 1),
     )
     .toBe(true);
-  const times = await Promise.all(
-    [page, friend].map((p) =>
-      p
-        .locator(".music-dock audio")
-        .evaluate((a: HTMLAudioElement) => a.currentTime),
-    ),
-  );
-  expect(Math.abs(times[0] - times[1])).toBeLessThan(1);
+  await expect
+    .poll(async () => {
+      const times = await Promise.all(
+        [page, friend].map((p) =>
+          p
+            .locator(".music-dock audio")
+            .evaluate((a: HTMLAudioElement) => a.currentTime),
+        ),
+      );
+      return Math.abs(times[0] - times[1]);
+    })
+    .toBeLessThan(0.45);
   await page.getByRole("button", { name: "Pause shared music" }).click();
   await expect
     .poll(() =>
@@ -179,6 +183,31 @@ test("People opt in to synchronized MP3 and video audio, with personal and share
     )
     .toBe(true);
   expect(await friend.locator(".music-dock video").count()).toBe(0);
+  await expect(
+    friend.getByText("Preparing audio for smooth playback…"),
+  ).toHaveCount(0);
+  await seek.fill("12");
+  await seek.press("ArrowLeft");
+  await expect
+    .poll(
+      () =>
+        friend
+          .locator(".music-dock audio")
+          .evaluate((a: HTMLAudioElement) => a.currentTime),
+      { timeout: 1500, intervals: [50, 100, 100] },
+    )
+    .toBeGreaterThan(11);
+  await seek.fill("3");
+  await seek.press("ArrowLeft");
+  await expect
+    .poll(
+      () =>
+        friend
+          .locator(".music-dock audio")
+          .evaluate((a: HTMLAudioElement) => a.currentTime),
+      { timeout: 1500, intervals: [50, 100, 100] },
+    )
+    .toBeLessThan(5);
   await friend.setViewportSize({ width: 390, height: 844 });
   await friend.getByRole("button", { name: "Change room appearance" }).click();
   await friend.getByRole("button", { name: /Love letters/ }).click();

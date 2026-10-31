@@ -14,7 +14,7 @@ import {
 } from "./upload-limits";
 import { allEmojis } from "./emojis";
 import { callConfig } from "./call-token";
-import { musicCommand, musicSnapshot } from "./music-server";
+import { musicCommand, musicSnapshot, musicPlayback } from "./music-server";
 
 type Row = Record<string, any>;
 const db = () => {
@@ -149,6 +149,7 @@ const safeRoom = (r: Row) => ({
 const admin = (m: Row) => m.role === "owner" || m.role === "moderator";
 
 export async function handle(req: Request) {
+  const requestReceivedAt = Date.now();
   try {
     const url = new URL(req.url);
     const parts = url.pathname.replace(/^\/api\//, "").split("/");
@@ -363,7 +364,17 @@ export async function handle(req: Request) {
     }
     const { room, member } = await access(slug, user);
     if (action === "music" && parts.length === 3) {
+      const musicJson = (value: Record<string, any>) =>
+        json({ ...value, serverReceivedAt: requestReceivedAt });
       if (method === "GET") {
+        if (url.searchParams.get("playback") === "1")
+          return musicJson(
+            await musicPlayback(
+              room.id,
+              user.id,
+              Number(url.searchParams.get("revision")),
+            ),
+          );
         await run(
           "UPDATE memberships SET lastSeen=? WHERE roomId=? AND sessionId=? AND EXISTS(SELECT 1 FROM music_choices c JOIN music_states s ON s.roomId=c.roomId AND s.trackId=c.trackId WHERE c.roomId=? AND c.sessionId=? AND c.response='accepted' AND s.playing=1)",
           Date.now(),
@@ -372,11 +383,11 @@ export async function handle(req: Request) {
           room.id,
           user.id,
         );
-        return json(await musicSnapshot(room.id, user.id));
+        return musicJson(await musicSnapshot(room.id, user.id));
       }
       if (method !== "POST") fail("Method not allowed.", 405);
       await rate("music:" + user.id, 90);
-      return json(await musicCommand(req, room, user, member));
+      return musicJson(await musicCommand(req, room, user, member));
     }
     if (action === "logo") {
       if (method === "GET") {

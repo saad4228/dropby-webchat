@@ -94,13 +94,47 @@ await request(
   "POST",
   400,
 );
-const first = await request(owner, path, {
+let first = await request(owner, path, {
   action: "queue",
   attachmentId,
   title: "Shared MP3",
   duration: 45,
 });
 assert.equal(first.current.title, "Shared MP3");
+const light = await request(
+  friend,
+  path + "?playback=1&revision=" + first.state.revision,
+);
+assert.equal(light.state.revision, first.state.revision);
+assert.ok(!("queue" in light));
+assert.equal(typeof light.serverReceivedAt, "number");
+await request(
+  stranger,
+  path + "?playback=1&revision=" + first.state.revision,
+  undefined,
+  "GET",
+  403,
+);
+await request(
+  owner,
+  path,
+  {
+    action: "seek",
+    position: 2,
+    trackId: randomUUID(),
+    revision: first.state.revision,
+  },
+  "POST",
+  409,
+);
+first = await request(owner, path, {
+  action: "seek",
+  position: 2,
+  at: Date.now() - 1200,
+  trackId: first.current.id,
+  revision: first.state.revision,
+});
+assert.ok(first.state.position >= 3.2);
 await request(
   owner,
   path,

@@ -27,9 +27,41 @@ const trackSql =
   "SELECT t.*,s.name AS addedByName,a.mime FROM music_tracks t JOIN sessions s ON s.id=t.addedBy JOIN attachments a ON a.id=t.attachmentId";
 async function readState(roomId: string) {
   return await first(
-    "SELECT ms.*,s.name AS controllerName,m.lastSeen,m.banned FROM music_states ms LEFT JOIN sessions s ON s.id=ms.controllerId LEFT JOIN memberships m ON m.roomId=ms.roomId AND m.sessionId=ms.controllerId WHERE ms.roomId=?",
+    "SELECT ms.*,s.name AS controllerName,m.lastSeen,m.banned,t.duration FROM music_states ms LEFT JOIN sessions s ON s.id=ms.controllerId LEFT JOIN memberships m ON m.roomId=ms.roomId AND m.sessionId=ms.controllerId LEFT JOIN music_tracks t ON t.id=ms.trackId WHERE ms.roomId=?",
     roomId,
   );
+}
+export async function musicPlayback(
+  roomId: string,
+  userId: string,
+  revision: number,
+) {
+  const state = await readState(roomId);
+  if (
+    !state ||
+    state.revision !== revision ||
+    (state.playing &&
+      state.duration &&
+      musicPosition(
+        { ...state, playing: true } as any,
+        state.duration,
+        Date.now(),
+      ) >= state.duration)
+  )
+    return musicSnapshot(roomId, userId);
+  return {
+    state: {
+      trackId: state.trackId,
+      controllerId: state.controllerId,
+      controllerName: state.controllerName,
+      controllerOnline: !state.banned && state.lastSeen > Date.now() - 35000,
+      position: state.position,
+      playing: !!state.playing,
+      updatedAt: state.updatedAt,
+      revision: state.revision,
+    },
+    serverNow: Date.now(),
+  };
 }
 async function advance(
   roomId: string,
@@ -179,6 +211,8 @@ const command = z.discriminatedUnion("action", [
     action: z.literal("seek"),
     revision: z.number().int().nonnegative(),
     position: z.number().finite().min(0).max(7200),
+    at: z.number().finite().nonnegative().optional(),
+    trackId: z.string().uuid().optional(),
   }),
   z.object({ action: z.literal("remove"), trackId: z.string().uuid() }),
 ]);
@@ -285,6 +319,8 @@ export async function musicCommand(
     return musicSnapshot(roomId, user.id);
   }
   if (!state) fail("Add a song to start a listening session.", 409);
+  if (b.action === "seek" && b.trackId && b.trackId !== state!.trackId)
+    fail("The song changed. Choose a position in the new song.", 409);
   if (state!.revision !== b.revision)
     fail("The player changed. Try that control again.", 409);
   if (b.action === "claim") {
@@ -318,7 +354,13 @@ export async function musicCommand(
       if (!track) fail("Add a song to start a listening session.", 409);
       const position =
         b.action === "seek"
-          ? Math.min(b.position, track!.duration)
+          ? Math.min(
+              b.position +
+                (state!.playing && b.at
+                  ? Math.max(0, Math.min(5000, now - b.at)) / 1000
+                  : 0),
+              track!.duration,
+            )
           : musicPosition(
               { ...state!, playing: !!state!.playing } as any,
               track!.duration,

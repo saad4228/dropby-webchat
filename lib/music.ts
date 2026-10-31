@@ -33,7 +33,12 @@ export type MusicSnapshot = {
     changeRequested: boolean;
   } | null;
   serverNow: number;
+  serverReceivedAt?: number;
 };
+export type MusicPlaybackUpdate = Pick<
+  MusicSnapshot,
+  "state" | "serverNow" | "serverReceivedAt"
+>;
 export const MUSIC_MIMES = [
   "audio/mpeg",
   "audio/mp4",
