@@ -1,0 +1,147 @@
+/* Match-day glass: sky blue, pitch green and the supplied stadium artwork. */
+.chat-app.theme-football {
+  --conversation-surface: color-mix(
+    in srgb,
+    var(--room-panel) calc(var(--glass-opacity, 0.87) * 70%),
+    transparent
+  );
+  --panel-action-bg: var(--room-soft);
+  --panel-action-ink: var(--room-ink);
+  --panel-action-border: var(--room-line);
+  --football-shadow: #143d5826;
+  --football-highlight: #ffffffa1;
+  --football-chrome: color-mix(in srgb, var(--room-panel) 92%, transparent);
+}
+[data-mode="dark"] .chat-app.theme-football {
+  --conversation-surface: color-mix(
+    in srgb,
+    var(--room-panel) calc(var(--glass-opacity, 0.87) * 58%),
+    transparent
+  );
+  --football-shadow: #020e2066;
+  --football-highlight: #b8e5ff26;
+}
+.chat-app.theme-football .room-header,
+.chat-app.theme-football .room-rail,
+.chat-app.theme-football .conversation-shell {
+  box-shadow:
+    0 8px 30px var(--football-shadow),
+    inset 0 1px var(--football-highlight);
+}
+.chat-app.theme-football .conversation-shell,
+.chat-app.theme-football .room-rail {
+  border-color: var(--football-highlight);
+}
+.chat-app.theme-football .conversation-toolbar {
+  background: var(--football-chrome);
+  border-radius: 25px 25px 0 0;
+  padding-block: 9px;
+}
+.chat-app.theme-football .conversation-heading {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--room-ink);
+}
+.chat-app.theme-football .conversation-heading > svg {
+  color: var(--accent);
+}
+.chat-app.theme-football .conversation-toolbar > .music-dock {
+  background: var(--room-soft);
+  border-radius: 14px;
+}
+.chat-app.theme-football .music-record {
+  color: var(--accent);
+  background: var(--room-panel);
+}
+.chat-app.theme-football .music-panel,
+.chat-app.theme-football .room-panel,
+.chat-app.theme-football .emoji-picker,
+.chat-app.theme-football .message-menu {
+  box-shadow: 0 16px 50px var(--football-shadow);
+}
+.chat-app.theme-football .conversation-shell .composer-area {
+  background: var(--football-chrome);
+  border-top: 1px solid var(--room-line);
+  border-radius: 0 0 25px 25px;
+}
+.chat-app.theme-football .composer {
+  background: var(--room-panel);
+  border-radius: 17px;
+  box-shadow: 0 3px 15px var(--football-shadow);
+}
+.chat-app.theme-football .composer:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.chat-app.theme-football .message-bubble {
+  box-shadow: 0 3px 12px var(--football-shadow);
+}
+.chat-app.theme-football .own .message-bubble {
+  border: 1px solid var(--football-highlight);
+}
+.chat-app.theme-football .message-bubble.emoji-only {
+  border-color: transparent;
+  box-shadow: none;
+}
+.chat-app.theme-football .message-byline,
+.chat-app.theme-football .message-receipt,
+.chat-app.theme-football .typing-indicator {
+  text-shadow:
+    0 1px 5px var(--room-panel),
+    0 0 10px var(--room-panel);
+}
+.chat-app.theme-football .message-reactions button,
+.chat-app.theme-football .chat-date > span {
+  background: var(--room-panel);
+}
+.chat-app.theme-football .has-conversation .room-welcome {
+  background: var(--football-chrome);
+  border-left: 3px solid var(--accent);
+}
+.chat-app.theme-football .room-home {
+  box-shadow: inset 0 1px var(--football-highlight);
+}
+/* The artwork contains its own pitch and ball; leave the conversation unobstructed. */
+.scene-football .pitch-lines,
+.scene-football .ambient-football,
+.scene-football .pitch-caption {
+  display: none;
+}
+.scene-football .stadium-light {
+  opacity: 0.13;
+}
+.theme-thumb.theme-football:before {
+  background: url("/themes/football-light.png") center / cover;
+}
+[data-mode="dark"] .theme-thumb.theme-football:before {
+  background-image: url("/themes/football-dark.png");
+}
+.theme-thumb.theme-football:after {
+  inset: 0;
+  border: 0;
+  background: linear-gradient(transparent 35%, #07344d29);
+}
+.theme-thumb.theme-football b {
+  background: #f5fbfc;
+  border-radius: 5px 5px 5px 1px;
+}
+.theme-thumb.theme-football b:nth-child(2) {
+  background: #176b51;
+  border-radius: 5px 5px 1px 5px;
+}
+[data-mode="dark"] .theme-thumb.theme-football b {
+  background: #172d40;
+}
+[data-mode="dark"] .theme-thumb.theme-football b:nth-child(2) {
+  background: #126854;
+}
+@media (max-width: 700px) {
+  .chat-app.theme-football .conversation-toolbar {
+    border-radius: 20px 20px 0 0;
+    padding-block: 7px;
+  }
+  .chat-app.theme-football .conversation-shell .composer-area {
+    border-radius: 0 0 20px 20px;
+  }
+}

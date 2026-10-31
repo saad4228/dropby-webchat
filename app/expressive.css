@@ -291,30 +291,49 @@
   opacity: 1;
   mix-blend-mode: normal;
 }
-/* Football night: stadium lights, pitch markings, and a dark clubhouse. */
+/* Football: sunlit stands by day, a floodlit stadium after dark. */
 .chat-app.theme-football {
-  --accent: #6be0ac;
-  --accent-ink: #102d25;
-  --sent: linear-gradient(125deg, #1c7057, #226778);
-  --sent-text: #f5fff9;
-  --received: #1c3743;
-  --received-text: #e4f4ef;
-  --room-panel: rgba(19, 41, 49, 0.98);
-  --room-header: rgba(18, 39, 48, var(--glass-opacity, 0.94));
-  --room-soft: #274651;
-  --room-line: #93ccb238;
-  --room-ink: #e7f7ef;
-  --room-muted: #adcbbb;
-  --room-canvas: #0c252b24;
+  --accent: #176b51;
+  --accent-ink: #fff;
+  --sent: linear-gradient(125deg, #126b58, #165f7e);
+  --sent-text: #fff;
+  --received: #f5fbfc;
+  --received-text: #183c49;
+  --room-panel: rgba(244, 251, 253, 0.98);
+  --room-header: rgba(239, 249, 253, var(--glass-opacity, 0.93));
+  --room-soft: #dfedf1;
+  --room-line: #235b6c30;
+  --room-ink: #183c49;
+  --room-muted: #425f6b;
+  --room-canvas: #eef8fc66;
+}
+[data-mode="dark"] .chat-app.theme-football {
+  --accent: #8be3bd;
+  --accent-ink: #0d2a23;
+  --sent: linear-gradient(125deg, #126854, #1b557a);
+  --received: #172d40;
+  --received-text: #edf8ff;
+  --room-panel: rgba(16, 31, 47, 0.98);
+  --room-header: rgba(14, 29, 46, var(--glass-opacity, 0.94));
+  --room-soft: #233e50;
+  --room-line: #9bd6ec30;
+  --room-ink: #edf8ff;
+  --room-muted: #bdd4e1;
+  --room-canvas: #0e20334d;
 }
 .chat-app.theme-football > .chat-scenery {
   filter: none;
   background:
-    linear-gradient(115deg, #071e2be8, #103b2ad9),
-    var(--custom-wallpaper, url("/stadium.jpg")) center/cover;
+    linear-gradient(180deg, #e9f7ff1a, #f4fbef24),
+    var(--custom-wallpaper, url("/themes/football-light.png")) center / cover;
+}
+[data-mode="dark"] .chat-app.theme-football > .chat-scenery {
+  background:
+    linear-gradient(180deg, #0715250d, #07152538),
+    var(--custom-wallpaper, url("/themes/football-dark.png")) center / cover;
 }
 .chat-app.theme-football > .chat-scenery:after {
-  background: radial-gradient(ellipse at 50% -20%, #a6e5cf29, transparent 65%);
+  background: none;
   backdrop-filter: none;
 }
 .theme-football .message-bubble {
@@ -324,15 +343,15 @@
   border-radius: 13px 4px 13px 13px;
 }
 .theme-football .room-header {
-  border-top: 2px solid #6be0ac78;
+  border-top: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
 .theme-football .room-welcome-icon {
-  border-color: #6be0ac66;
-  box-shadow: 0 0 0 6px #6be0ac0b;
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 4%, transparent);
 }
 .theme-football .composer {
   border-radius: 15px;
-  border-bottom: 2px solid #6be0ac55;
+  border-bottom: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .theme-football .send-button {
   border-radius: 10px;
