@@ -6,6 +6,7 @@ import Onboarding from "./onboarding";
 import { Modal } from "./modal";
 import { api, Identity, colors } from "../lib/client";
 import { ArrowRight, Heart, ShieldCheck } from "lucide-react";
+import { creator } from "../lib/creator";
 export default function App() {
   const [user, setUser] = useState<Identity | null>(null),
     [room, setRoom] = useState(""),
@@ -148,14 +149,21 @@ export default function App() {
             </>
           ) : info === "Contact" ? (
             <>
-              <p>The creator’s contact details haven’t been added yet.</p>
+              <p>
+                Have a question or an idea for DropBy? Get in touch with{" "}
+                {creator.name}.
+              </p>
+              <a className="contact-email" href={"mailto:" + creator.email}>
+                {creator.email}
+                <ArrowRight size={16} />
+              </a>
               <p>
                 For issues inside a room, use Report on a message to contact
                 that room’s moderators.
               </p>
-              <span className="placeholder-label">
-                Editable placeholder · creator contact and social links
-              </span>
+              <a className="creator-contact-link" href="/about#contact">
+                More about Saad & ways to connect <ArrowRight size={14} />
+              </a>
             </>
           ) : (
             <>

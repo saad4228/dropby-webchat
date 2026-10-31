@@ -45,6 +45,7 @@ export function Footer({ onInfo }: { onInfo: (s: string) => void }) {
       <Brand />
       <span>A little closer, wherever you are.</span>
       <div>
+        <a href="/about">About the creator</a>
         {["Privacy", "Terms", "Contact"].map((s) => (
           <button key={s} onClick={() => onInfo(s)}>
             {s}

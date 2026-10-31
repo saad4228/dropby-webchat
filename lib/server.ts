@@ -6,6 +6,7 @@ import {
   messageSchema,
 } from "./validation";
 import { z } from "zod";
+import { themeIds } from "./themes";
 import {
   MAX_IMAGE_BYTES,
   IMAGE_MIMES,
@@ -473,14 +474,7 @@ export async function handle(req: Request) {
       const b = z
         .object({
           description: z.string().max(240),
-          theme: z.enum([
-            "alpine",
-            "lavender",
-            "ocean",
-            "sunset",
-            "forest",
-            "midnight",
-          ]),
+          theme: z.enum(themeIds),
           locked: z.boolean(),
           logo: z.string().min(1).max(12).optional(),
           clearLogoImage: z.boolean().default(false),

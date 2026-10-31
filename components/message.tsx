@@ -18,6 +18,8 @@ import {
 import { Avatar } from "./brand";
 import { EmojiPicker } from "./emoji-picker";
 import { Message as Msg, Identity, Snapshot } from "../lib/client";
+import { EmojiText, EmojiGlyph, burstEmoji } from "./animated-emoji";
+import { emojiOnly } from "../lib/emoji-motion";
 function VoicePlayer({ src }: { src: string }) {
   const ref = useRef<HTMLAudioElement>(null),
     [playing, setPlaying] = useState(false),
@@ -153,6 +155,7 @@ export default function Message({
   const own = m.senderId === user.id,
     [menu, setMenu] = useState(false),
     [react, setReact] = useState(false);
+  const largeEmoji = !m.attachmentId && emojiOnly(m.text);
   const reply = snapshot.messages.find((a) => a.id === m.replyId);
   const reactions = snapshot.reactions.filter((r) => r.messageId === m.id);
   const emojis = [...new Set(reactions.map((r) => r.emoji))];
@@ -192,7 +195,11 @@ export default function Message({
           </div>
         )}
         <div
-          className={"message-bubble " + (m.attachmentId ? "with-media" : "")}
+          className={
+            "message-bubble " +
+            (m.attachmentId ? "with-media" : "") +
+            (largeEmoji ? " emoji-only" : "")
+          }
           onDoubleClick={() => onAction("reaction", m, "❤️")}
         >
           {m.replyId && (
@@ -269,7 +276,7 @@ export default function Message({
                     {part}
                   </a>
                 ) : (
-                  part
+                  <EmojiText key={i} text={part} large={largeEmoji} />
                 ),
               )}
             </p>
@@ -288,13 +295,16 @@ export default function Message({
                     ? "mine"
                     : ""
                 }
-                onClick={() => onAction("reaction", m, emoji)}
+                onClick={(e) => {
+                  burstEmoji(emoji, e.currentTarget);
+                  onAction("reaction", m, emoji);
+                }}
                 title={reactions
                   .filter((r) => r.emoji === emoji)
                   .map((r) => r.name)
                   .join(", ")}
               >
-                {emoji}{" "}
+                <EmojiGlyph emoji={emoji} />{" "}
                 <span>{reactions.filter((r) => r.emoji === emoji).length}</span>
               </button>
             ))}

@@ -25,7 +25,8 @@ import { Avatar } from "./brand";
 import { RoomLogoPicker } from "./room-logo-picker";
 import { RoomMark } from "./room-mark";
 import { IMAGE_MIMES, MAX_IMAGE_BYTES } from "../lib/upload-limits";
-import { api, Snapshot, Identity, themes, Message } from "../lib/client";
+import { api, Snapshot, Identity, Message } from "../lib/client";
+import { themes } from "../lib/themes";
 export type Appearance = {
   theme: string;
   accent: string;
@@ -34,6 +35,7 @@ export type Appearance = {
   opacity: number;
   blur: number;
   background: string;
+  animations: boolean;
 };
 export const defaultAppearance: Appearance = {
   theme: "",
@@ -43,6 +45,7 @@ export const defaultAppearance: Appearance = {
   opacity: 85,
   blur: 16,
   background: "",
+  animations: true,
 };
 export default function RoomPanels({
   panel,
@@ -320,6 +323,9 @@ export default function RoomPanels({
                     <span />
                     <i />
                     <b />
+                    <em className="theme-thumb-symbol" aria-hidden="true">
+                      {t.icon}
+                    </em>
                     {(appearance.theme || snapshot.room.theme) === t.id && (
                       <Check size={16} />
                     )}
@@ -328,6 +334,26 @@ export default function RoomPanels({
                   <small>{t.subtitle}</small>
                 </button>
               ))}
+            </div>
+            <div className="room-motion-setting">
+              <div>
+                <strong>Room motion</strong>
+                <small>Ambient details & expressive emoji</small>
+              </div>
+              <button
+                className="switch"
+                role="switch"
+                aria-label="Room animations"
+                aria-checked={appearance.animations}
+                onClick={() =>
+                  onAppearance({
+                    ...appearance,
+                    animations: !appearance.animations,
+                  })
+                }
+              >
+                <i />
+              </button>
             </div>
             <details className="custom-theme">
               <summary>

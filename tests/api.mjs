@@ -277,6 +277,26 @@ await request(
 assert.equal((await request(member, "rooms/" + slug)).room.theme, "forest");
 await request(stranger, "rooms/" + slug + "/join", {}, "POST", 403);
 ok("Owner-only settings, shared themes and room lock");
+for (const theme of ["love", "football", "cosmic", "arcade"]) {
+  await request(
+    owner,
+    "rooms/" + slug + "/settings",
+    { description: "Updated room", theme, locked: true },
+    "PATCH",
+  );
+  assert.equal((await request(member, "rooms/" + slug)).room.theme, theme);
+}
+await request(
+  owner,
+  "rooms/" + slug + "/settings",
+  { description: "Updated room", theme: "unknown", locked: true },
+  "PATCH",
+  400,
+);
+assert.equal((await request(member, "rooms/" + slug)).room.theme, "arcade");
+ok(
+  "Expressive themes persist for other members and invalid presets are rejected",
+);
 await request(member, "rooms/" + slug + "/typing", {});
 assert.ok(
   (await request(owner, "rooms/" + slug)).members.find(

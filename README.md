@@ -29,12 +29,14 @@ Open the printed local URL. Run the initial migration once per local database. L
 - R2 image/video/audio/PDF/text uploads (15 MiB), content-signature checks, authenticated downloads, inline players, photo viewer, shared-media panel, clipboard paste and drag-and-drop.
 - Browser voice recording: pause/resume, cancel, stop, preview before attachment, native audio playback, seeking and speed controls.
 - Actual small-group WebRTC audio/video calls, authorized signaling, microphone/camera/device selection, screen sharing, floating/expanded panels, and a four-person cap. A configurable LiveKit SFU integration supports larger groups.
-- Six themes, persistent personal overrides, shared owner-controlled presets, custom message/accent colors with contrasting bubble text, uploaded local wallpapers, opacity/blur controls, light/dark mode, and reduced motion.
+- Ten themes, persistent personal overrides, shared owner-controlled presets, custom message/accent colors with contrasting text, uploaded local wallpapers, opacity/blur controls, light/dark mode, and reduced motion. Love letters, Football night, Cosmic daydream and Retro arcade change backgrounds, bubble shapes, controls and ambient details.
+- Animated Unicode emojis in messages, enlarged emoji-only messages, replay on tap and bounded reaction bursts. All 647 picker emojis have a motion; joined characters, skin tones and flags stay intact. System reduced motion and the persistent Room motion switch disable effects.
+- A dedicated `/about` creator page using Mohammad Saad’s supplied biography, Instagram and LinkedIn links, plus the contact email. The homepage navigation provides both Join and Create actions.
 - Wallpapers up to 7 MiB persist in IndexedDB; short browser object URLs display large images without CSS custom-property limits or localStorage quota failures. The categorized emoji picker includes 647 emojis for messages and reactions.
 - Server-enforced mute/unmute, bans, moderator assignments, message reports and owner/moderator report review.
 - Contextual floating panels, keyboard composer, focus-trapped dialogs, semantic controls, meaningful empty/error/loading states.
 
-The product name is centralized in a few brand/metadata surfaces and is replaceable. Creator information is explicitly placeholder content; no biography or external social links were invented.
+The product name is centralized in a few brand/metadata surfaces and is replaceable. Creator information is centralized in `lib/creator.ts` and uses the biography and links supplied by Mohammad Saad.
 
 ## Architecture
 
@@ -80,13 +82,12 @@ With the local server running:
 ```powershell
 npx tsc --noEmit
 node tests/api.mjs
-node --test tests/call-token.test.mjs
-node --test tests/uploads.test.mjs
+npm run test:unit
 npx playwright test
 npm run build
 ```
 
-The API suite uses independent cookie jars and covers 31 room, logo authorization, privacy, messaging, idempotency, permission, reaction, media range, moderation, signaling, CSRF, session and optional account scenarios. Nine unit tests verify SFU tokens/capacities, upload error handling, image limits and signature checks. Ten browser journeys cover onboarding, two-user conversations, actual peer calls with synthetic media, mobile/dark layouts, large image and logo uploads, wallpaper persistence, repeated emoji/reaction selections, navigation joining, native autofill appearance, text/button contrast and room details. Screenshots are stored in ignored `outputs/`.
+The API suite uses independent cookie jars and covers 32 room, shared theme, logo authorization, privacy, messaging, idempotency, permission, reaction, media range, moderation, signaling, CSRF, session and optional account scenarios. Twelve unit tests verify SFU tokens/capacities, upload error handling, image limits, signature checks and emoji graphemes. Thirteen browser journeys cover onboarding, two-user conversations, actual peer calls with synthetic media, mobile/dark layouts, large image and logo uploads, wallpaper persistence, repeated emoji/reaction selections, navigation joining, native autofill appearance, text/button contrast, room details, creator/contact navigation, expressive theme persistence, emoji animations and reduced motion. Screenshots are stored in ignored `outputs/`.
 
 The default Playwright configuration uses installed Windows Chrome; set `PLAYWRIGHT_CHROME_PATH` to another Chrome/Chromium executable on a different host. Tests use synthetic microphone/camera devices. They do not prove real hardware quality, Safari/Firefox compatibility or connectivity across all NAT/firewall combinations. Browser permissions and device/network behavior require manual cross-browser testing.
 

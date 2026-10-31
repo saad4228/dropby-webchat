@@ -11,6 +11,8 @@ import {
   Zap,
   Globe,
   Plus,
+  MessageCircle,
+  UserRound,
 } from "lucide-react";
 import { api, avatars, colors, Identity } from "../lib/client";
 import { Avatar } from "./brand";
@@ -96,7 +98,15 @@ export default function Onboarding({
   return (
     <Modal onClose={onClose} className="onboarding">
       <div className="onboarding-cover">
-        <span>{step === 0 ? "✳" : step === 1 ? "👋" : "✨"}</span>
+        <span className="onboarding-emblem" aria-hidden="true">
+          {step === 0 ? (
+            <MessageCircle size={29} />
+          ) : step === 1 ? (
+            <UserRound size={29} />
+          ) : (
+            <Check size={29} />
+          )}
+        </span>
       </div>
       <div className="step-dots">
         {[0, 1, 2].map((n) => (

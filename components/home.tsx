@@ -189,7 +189,7 @@ export default function Home({
         <div className="nav-links">
           <a href="#features">The good stuff</a>
           <a href="#how-it-works">How it works</a>
-          <a href="#about">A little about us</a>
+          <a href="/about">Meet the creator</a>
         </div>
         <div className="nav-actions">
           <button
@@ -201,12 +201,23 @@ export default function Home({
           </button>
           <button
             className="nav-join"
+            aria-label="Join a room"
             onClick={() => {
               setError("");
               setJoinPrompt(true);
             }}
           >
-            Join a room <ArrowUpRight size={16} />
+            <span className="nav-full">Join a room</span>
+            <span className="nav-short">Join</span> <ArrowUpRight size={16} />
+          </button>
+          <button
+            className="nav-create"
+            onClick={onCreate}
+            aria-label="Create a room"
+          >
+            <Plus size={15} />
+            <span className="nav-full">Create a room</span>
+            <span className="nav-short">Create</span>
           </button>
         </div>
       </nav>
@@ -410,23 +421,25 @@ export default function Home({
             </div>
           </div>
         </section>
-        <section className="creator-section" id="about">
-          <span className="creator-avatar">✳</span>
+        <a
+          className="creator-section creator-link"
+          id="about"
+          href="/about"
+          aria-label="About Mohammad Saad, creator of DropBy"
+        >
+          <span className="creator-avatar">MS</span>
           <div>
             <span className="section-label">A LITTLE ABOUT THE CREATOR</span>
-            <h3>Built with a simple idea: bring people closer.</h3>
+            <h3>Mohammad Saad — the creator of DropBy.</h3>
             <p>
-              A personal corner for the person behind DropBy. Creator bio and
-              social links coming soon.
+              A little about me and the idea behind DropBy. Always curious,
+              always building.
             </p>
           </div>
-          <button
-            onClick={() => onInfo("About DropBy")}
-            aria-label="About DropBy"
-          >
+          <span className="creator-link-arrow" aria-hidden="true">
             <ArrowUpRight size={21} />
-          </button>
-        </section>
+          </span>
+        </a>
       </main>
       <Footer onInfo={onInfo} />
       <div className="bottom-signature">

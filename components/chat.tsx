@@ -49,6 +49,9 @@ import RoomPanels, { Appearance, defaultAppearance } from "./room-panels";
 import CallPanel from "./call-panel";
 import { useCall } from "../hooks/use-call";
 import { Modal } from "./modal";
+import { getTheme } from "../lib/themes";
+import { EmojiEffects } from "./animated-emoji";
+import { ThemeScene } from "./theme-scene";
 const time = Date.now() - 8 * 60000;
 export function demoSnapshot(user: Identity): Snapshot {
   return {
@@ -657,11 +660,15 @@ export default function Chat({
     }
   }
   const theme = appearance.theme || data?.room.theme || "alpine";
+  const themeInfo = getTheme(theme);
   const custom: React.CSSProperties & Record<string, any> = {
     "--glass-opacity": appearance.opacity / 100,
     "--glass-blur": appearance.blur + "px",
   };
-  if (appearance.accent) custom["--accent"] = appearance.accent;
+  if (appearance.accent) {
+    custom["--accent"] = appearance.accent;
+    custom["--accent-ink"] = contrast(appearance.accent);
+  }
   if (appearance.sent) {
     custom["--sent"] = appearance.sent;
     custom["--sent-text"] = contrast(appearance.sent);
@@ -673,7 +680,11 @@ export default function Chat({
   if (wallpaperUrl) custom["--custom-wallpaper"] = `url("${wallpaperUrl}")`;
   return (
     <div
-      className={"chat-app theme-" + theme}
+      className={
+        "chat-app theme-" +
+        theme +
+        (appearance.animations ? " motion-on" : " motion-off")
+      }
       style={custom}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
@@ -682,6 +693,8 @@ export default function Chat({
       }}
     >
       <div className="chat-scenery" />
+      <ThemeScene theme={theme} />
+      <EmojiEffects enabled={appearance.animations} />
       <header className="room-header">
         <button className="room-home" aria-label="Back to home" onClick={leave}>
           {data ? (
@@ -711,7 +724,8 @@ export default function Chat({
           </span>
         </button>
         <div className="header-room-tag">
-          <Hash size={12} /> YOUR LITTLE CORNER OF THE INTERNET
+          <span aria-hidden="true">{themeInfo.icon}</span>
+          {themeInfo.name}
         </div>
         <div className="room-header-actions">
           <button
@@ -822,9 +836,7 @@ export default function Chat({
                   <RoomMark room={data.room} />
                 </span>
                 <span className="section-label">
-                  {demo
-                    ? "MATCH NIGHT. GOOD COMPANY."
-                    : "A LITTLE SPACE FOR YOUR PEOPLE"}
+                  {demo ? "MATCH NIGHT. GOOD COMPANY." : themeInfo.eyebrow}
                 </span>
                 <h2>
                   {demo
