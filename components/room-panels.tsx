@@ -20,6 +20,7 @@ import {
   Shield,
   Sun,
   Moon,
+  Trash2,
 } from "lucide-react";
 import { Avatar } from "./brand";
 import { RoomLogoPicker } from "./room-logo-picker";
@@ -60,6 +61,7 @@ export default function RoomPanels({
   onView,
   onLeave,
   onIdentity,
+  onDeleteMessages,
   demo,
   dark,
   onDark,
@@ -76,6 +78,7 @@ export default function RoomPanels({
   onView: (m: Message) => void;
   onLeave: () => void;
   onIdentity: () => void;
+  onDeleteMessages: () => void;
   demo: boolean;
   dark: boolean;
   onDark: () => void;
@@ -765,6 +768,11 @@ export default function RoomPanels({
                 <ArrowUpRight size={15} />
               </a>
             )}
+            <button className="danger" onClick={onDeleteMessages}>
+              <Trash2 size={19} />
+              Delete all my messages
+              <ArrowUpRight size={15} />
+            </button>
             <button className="danger" onClick={onLeave}>
               <LogOut size={19} />
               Leave this room

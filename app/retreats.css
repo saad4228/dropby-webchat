@@ -1,0 +1,489 @@
+/* Six supplied places, each with its own daylight and evening palette. */
+.theme-alpine {
+  --retreat-wallpaper: url("/themes/alpine.png");
+}
+.theme-lavender {
+  --retreat-wallpaper: url("/themes/lavender.png");
+}
+.theme-ocean {
+  --retreat-wallpaper: url("/themes/ocean.png");
+}
+.theme-sunset {
+  --retreat-wallpaper: url("/themes/sunset.png");
+}
+.theme-forest {
+  --retreat-wallpaper: url("/themes/forest.png");
+}
+.theme-midnight {
+  --retreat-wallpaper: url("/themes/midnight.png");
+}
+.chat-app.theme-alpine {
+  --accent: #32678a;
+  --accent-ink: #fff;
+  --sent: linear-gradient(125deg, #32678a, #3b6f74);
+  --retreat-panel-rgb: 243, 249, 253;
+  --room-soft: #e1edf5;
+  --room-line: #477b9f38;
+  --room-ink: #203e52;
+  --room-muted: #354f62;
+}
+[data-mode="dark"] .chat-app.theme-alpine {
+  --accent: #abd2ee;
+  --accent-ink: #183447;
+  --sent: linear-gradient(125deg, #345d7c, #32585c);
+  --retreat-panel-rgb: 20, 34, 46;
+  --room-soft: #2a4152;
+  --room-line: #abcde23b;
+  --room-ink: #eaf4fc;
+  --room-muted: #c4d6e4;
+}
+.chat-app.theme-lavender {
+  --accent: #75519a;
+  --accent-ink: #fff;
+  --sent: linear-gradient(125deg, #75519a, #694e94);
+  --retreat-panel-rgb: 251, 246, 254;
+  --room-soft: #eee2f4;
+  --room-line: #8a5d9f38;
+  --room-ink: #422c53;
+  --room-muted: #543b65;
+  --bubble-radius: 22px;
+  --bubble-corner: 6px;
+}
+[data-mode="dark"] .chat-app.theme-lavender {
+  --accent: #dfbcf6;
+  --accent-ink: #322341;
+  --sent: linear-gradient(125deg, #754d93, #5c4c91);
+  --retreat-panel-rgb: 30, 24, 43;
+  --room-soft: #40324f;
+  --room-line: #d7b3ed38;
+  --room-ink: #f7edff;
+  --room-muted: #dbcae7;
+}
+.chat-app.theme-ocean {
+  --accent: #176b94;
+  --accent-ink: #fff;
+  --sent: linear-gradient(125deg, #176b94, #0d727c);
+  --retreat-panel-rgb: 242, 250, 255;
+  --room-soft: #dfedf5;
+  --room-line: #296b9638;
+  --room-ink: #193f55;
+  --room-muted: #2f5266;
+  --bubble-radius: 20px;
+}
+[data-mode="dark"] .chat-app.theme-ocean {
+  --accent: #91d6ef;
+  --accent-ink: #173548;
+  --sent: linear-gradient(125deg, #235d81, #216b75);
+  --retreat-panel-rgb: 15, 31, 47;
+  --room-soft: #213e53;
+  --room-line: #91d6ef38;
+  --room-ink: #eaf7ff;
+  --room-muted: #c1d9e8;
+}
+.chat-app.theme-sunset {
+  --accent: #9c4e34;
+  --accent-ink: #fff;
+  --sent: linear-gradient(125deg, #9c4e34, #985b32);
+  --retreat-panel-rgb: 255, 247, 238;
+  --room-soft: #f7e6d7;
+  --room-line: #a9674338;
+  --room-ink: #543528;
+  --room-muted: #684634;
+  --bubble-radius: 20px;
+  --bubble-corner: 6px;
+}
+[data-mode="dark"] .chat-app.theme-sunset {
+  --accent: #ffc994;
+  --accent-ink: #482a24;
+  --sent: linear-gradient(125deg, #a15a37, #894648);
+  --retreat-panel-rgb: 43, 28, 29;
+  --room-soft: #543b35;
+  --room-line: #f3bc9238;
+  --room-ink: #fff1e0;
+  --room-muted: #e9ccba;
+}
+.chat-app.theme-forest {
+  --accent: #476c45;
+  --accent-ink: #fff;
+  --sent: linear-gradient(125deg, #456d4e, #49674c);
+  --retreat-panel-rgb: 246, 250, 240;
+  --room-soft: #e7eedf;
+  --room-line: #527b4938;
+  --room-ink: #2d442f;
+  --room-muted: #40583b;
+  --bubble-radius: 18px;
+}
+[data-mode="dark"] .chat-app.theme-forest {
+  --accent: #bdd89e;
+  --accent-ink: #253c2e;
+  --sent: linear-gradient(125deg, #44664d, #3e655e);
+  --retreat-panel-rgb: 24, 36, 29;
+  --room-soft: #344b3b;
+  --room-line: #b5d5a338;
+  --room-ink: #eef7e7;
+  --room-muted: #cbdcc1;
+}
+.chat-app.theme-midnight {
+  --accent: #875327;
+  --accent-ink: #fff;
+  --sent: linear-gradient(125deg, #875327, #78494a);
+  --retreat-panel-rgb: 255, 246, 239;
+  --room-soft: #efdfd6;
+  --room-line: #8a5f4438;
+  --room-ink: #42342f;
+  --room-muted: #59433a;
+  --bubble-radius: 17px;
+}
+[data-mode="dark"] .chat-app.theme-midnight {
+  --accent: #f3c27f;
+  --accent-ink: #292013;
+  --sent: linear-gradient(125deg, #965f23, #824c35);
+  --retreat-panel-rgb: 31, 28, 35;
+  --room-soft: #453a3c;
+  --room-line: #edbc8438;
+  --room-ink: #fff1df;
+  --room-muted: #e5ccba;
+}
+.chat-app:is(
+  .theme-alpine,
+  .theme-lavender,
+  .theme-ocean,
+  .theme-sunset,
+  .theme-forest,
+  .theme-midnight
+),
+[data-mode="dark"]
+  .chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  ) {
+  --room-panel: rgba(var(--retreat-panel-rgb), 0.98);
+  --room-header: rgba(var(--retreat-panel-rgb), var(--glass-opacity, 0.85));
+  --room-canvas: transparent;
+  --received: var(--room-panel);
+  --received-text: var(--room-ink);
+  --sent-text: #fff;
+  --conversation-surface: color-mix(
+    in srgb,
+    var(--room-panel) calc(var(--glass-opacity, 0.85) * 78%),
+    transparent
+  );
+  --panel-action-bg: var(--room-soft);
+  --panel-action-ink: var(--room-ink);
+  --panel-action-border: var(--room-line);
+  --retreat-shadow: #18344922;
+  --retreat-highlight: #ffffffa8;
+  --retreat-chrome: color-mix(in srgb, var(--room-panel) 94%, transparent);
+}
+[data-mode="dark"]
+  .chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  ) {
+  --conversation-surface: color-mix(
+    in srgb,
+    var(--room-panel) calc(var(--glass-opacity, 0.85) * 82%),
+    transparent
+  );
+  --retreat-shadow: #070e1b66;
+  --retreat-highlight: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  > .chat-scenery {
+  filter: none;
+  background:
+    linear-gradient(135deg, #fff8ef08, #e6f3ff14),
+    var(--custom-wallpaper, var(--retreat-wallpaper)) center / cover;
+}
+[data-mode="dark"]
+  .chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  > .chat-scenery {
+  background:
+    linear-gradient(135deg, #07152526, #11182461),
+    var(--custom-wallpaper, var(--retreat-wallpaper)) center / cover;
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  > .chat-scenery:after {
+  background: none;
+  backdrop-filter: none;
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  :is(.room-header, .room-rail, .conversation-shell) {
+  border-color: var(--retreat-highlight);
+  box-shadow:
+    0 8px 30px var(--retreat-shadow),
+    inset 0 1px var(--retreat-highlight);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .conversation-toolbar {
+  background: var(--retreat-chrome);
+  border-radius: 25px 25px 0 0;
+  padding-block: 9px;
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .conversation-heading
+  > svg {
+  color: var(--accent);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .conversation-toolbar
+  > .music-dock {
+  background: var(--room-soft);
+  border-radius: 18px;
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .music-record {
+  background: var(--room-panel);
+  color: var(--accent);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .conversation-shell
+  .composer-area {
+  background: var(--retreat-chrome);
+  border-top: 1px solid var(--room-line);
+  border-radius: 0 0 25px 25px;
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .composer {
+  background: var(--room-panel);
+  box-shadow: 0 3px 15px var(--retreat-shadow);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .message-bubble {
+  box-shadow: 0 3px 12px var(--retreat-shadow);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .own
+  .message-bubble {
+  border: 1px solid var(--retreat-highlight);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .message-bubble.emoji-only {
+  border-color: transparent;
+  box-shadow: none;
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  :is(.message-byline, .message-receipt, .typing-indicator) {
+  text-shadow:
+    0 1px 5px var(--room-panel),
+    0 0 10px var(--room-panel);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  :is(.message-reactions button, .chat-date > span) {
+  background: var(--room-panel);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .message-reactions
+  button.mine {
+  background: var(--room-soft);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  .has-conversation
+  .room-welcome {
+  background: var(--retreat-chrome);
+}
+.chat-app:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  :is(.room-panel, .music-panel, .emoji-picker, .message-menu) {
+  box-shadow: 0 16px 50px var(--retreat-shadow);
+}
+:is(.theme-thumb, .theme-preview):is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  ):before {
+  background: var(--retreat-wallpaper) center / cover;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+.theme-thumb:is(
+    .theme-alpine,
+    .theme-lavender,
+    .theme-ocean,
+    .theme-sunset,
+    .theme-forest,
+    .theme-midnight
+  )
+  b {
+  background: #f8fbff;
+}
+.theme-thumb.theme-alpine b:nth-child(2) {
+  background: #32678a;
+}
+.theme-thumb.theme-lavender b:nth-child(2) {
+  background: #75519a;
+}
+.theme-thumb.theme-ocean b:nth-child(2) {
+  background: #176b94;
+}
+.theme-thumb.theme-sunset b:nth-child(2) {
+  background: #9c4e34;
+}
+.theme-thumb.theme-forest b:nth-child(2) {
+  background: #476c45;
+}
+.theme-thumb.theme-midnight b:nth-child(2) {
+  background: #875327;
+}
+@media (max-width: 700px) {
+  .chat-app:is(
+      .theme-alpine,
+      .theme-lavender,
+      .theme-ocean,
+      .theme-sunset,
+      .theme-forest,
+      .theme-midnight
+    )
+    .conversation-toolbar {
+    border-radius: 20px 20px 0 0;
+    padding-block: 7px;
+  }
+  .chat-app:is(
+      .theme-alpine,
+      .theme-lavender,
+      .theme-ocean,
+      .theme-sunset,
+      .theme-forest,
+      .theme-midnight
+    )
+    .conversation-shell
+    .composer-area {
+    border-radius: 0 0 20px 20px;
+  }
+}

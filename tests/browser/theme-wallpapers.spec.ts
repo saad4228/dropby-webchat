@@ -16,13 +16,19 @@ function contrast(a: string, b: string) {
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
 
-for (const { theme, name } of [
-  { theme: "love", name: "Love letters" },
-  { theme: "football", name: "Football night" },
-  { theme: "arcade", name: "Retro arcade" },
-  { theme: "cosmic", name: "Cosmic daydream" },
+for (const { theme, name, paired } of [
+  { theme: "love", name: "Love letters", paired: true },
+  { theme: "football", name: "Football night", paired: true },
+  { theme: "arcade", name: "Retro arcade", paired: true },
+  { theme: "cosmic", name: "Cosmic daydream", paired: true },
+  { theme: "alpine", name: "Alpine escape", paired: false },
+  { theme: "lavender", name: "Lavender haze", paired: false },
+  { theme: "ocean", name: "Ocean blue", paired: false },
+  { theme: "sunset", name: "Golden hour", paired: false },
+  { theme: "forest", name: "Into the green", paired: false },
+  { theme: "midnight", name: "After hours", paired: false },
 ]) {
-  test(`${name} uses the supplied day/night artwork, readable messages and working compact controls`, async ({
+  test(`${name} uses the supplied artwork in both modes with readable messages and compact controls`, async ({
     page,
   }) => {
     const errors: string[] = [];
@@ -70,20 +76,18 @@ for (const { theme, name } of [
           .last()
           .click();
       }
+      const asset = paired ? `${theme}-${mode}` : theme;
       await expect(page.locator(".chat-scenery")).toHaveCSS(
         "background-image",
-        new RegExp(`${theme}-${mode}\\.png`),
+        new RegExp(`${asset}\\.png`),
       );
       expect(
-        await page.evaluate(
-          async ({ theme, mode }) => {
-            const image = new Image();
-            image.src = `/themes/${theme}-${mode}.png`;
-            await image.decode();
-            return [image.naturalWidth, image.naturalHeight];
-          },
-          { theme, mode },
-        ),
+        await page.evaluate(async (asset) => {
+          const image = new Image();
+          image.src = `/themes/${asset}.png`;
+          await image.decode();
+          return [image.naturalWidth, image.naturalHeight];
+        }, asset),
       ).toEqual([1536, 1024]);
       for (const selector of [
         ".message-row:not(.own) .message-bubble:not(.emoji-only)",
@@ -151,7 +155,7 @@ for (const { theme, name } of [
     await page.locator(".custom-theme summary").click();
     await page
       .getByLabel("Upload wallpaper (up to 7 MB)")
-      .setInputFiles(`public/themes/${theme}-light.png`);
+      .setInputFiles(`public/themes/${theme}${paired ? "-light" : ""}.png`);
     await expect(page.locator(".chat-scenery")).toHaveCSS(
       "background-image",
       /blob:/,

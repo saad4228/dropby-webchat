@@ -446,27 +446,54 @@ export async function handle(req: Request) {
       );
       const before =
         Number(url.searchParams.get("before")) || Number.MAX_SAFE_INTEGER;
-      const [messages, members, reactions, signals] = await Promise.all([
-        all(
-          "SELECT m.*,s.name,s.avatar,s.color,a.name AS fileName,a.mime AS fileMime,a.size AS fileSize FROM messages m JOIN sessions s ON s.id=m.senderId LEFT JOIN attachments a ON a.id=m.attachmentId WHERE m.roomId=? AND m.deleted=0 AND m.created<? ORDER BY m.created DESC,m.id DESC LIMIT 100",
+      const historyFrom = url.searchParams.get("historyFrom");
+      const knownVersion = url.searchParams.get("deletedVersion");
+      if (
+        knownVersion !== null &&
+        (!Number.isSafeInteger(Number(knownVersion)) ||
+          Number(knownVersion) < 0)
+      )
+        fail("Invalid deletion version.");
+      const deletedVersion = Number(
+        (await first(
+          "SELECT COUNT(*) AS total FROM messages WHERE roomId=? AND deleted=1",
           room.id,
-          before,
-        ),
-        all(
-          "SELECT s.id,s.name,s.avatar,s.color,m.role,m.lastSeen,m.typingUntil,m.inCall,m.muted,m.banned FROM memberships m JOIN sessions s ON s.id=m.sessionId WHERE m.roomId=? AND m.banned=0",
-          room.id,
-        ),
-        all(
-          "SELECT r.messageId,r.sessionId,r.emoji,s.name FROM reactions r JOIN messages m ON m.id=r.messageId JOIN sessions s ON s.id=r.sessionId WHERE m.roomId=? AND m.deleted=0",
-          room.id,
-        ),
-        all(
-          "SELECT * FROM signals WHERE roomId=? AND recipientId=? AND created>? ORDER BY created ASC LIMIT 100",
-          room.id,
-          user.id,
-          now - 60000,
-        ),
-      ]);
+        ))!.total,
+      );
+      if (
+        historyFrom !== null &&
+        (!Number.isSafeInteger(Number(historyFrom)) || Number(historyFrom) < 0)
+      )
+        fail("Invalid history boundary.");
+      const [messages, members, reactions, signals, deletedHistory] =
+        await Promise.all([
+          all(
+            "SELECT m.*,s.name,s.avatar,s.color,a.name AS fileName,a.mime AS fileMime,a.size AS fileSize FROM messages m JOIN sessions s ON s.id=m.senderId LEFT JOIN attachments a ON a.id=m.attachmentId WHERE m.roomId=? AND m.deleted=0 AND m.created<? ORDER BY m.created DESC,m.id DESC LIMIT 100",
+            room.id,
+            before,
+          ),
+          all(
+            "SELECT s.id,s.name,s.avatar,s.color,m.role,m.lastSeen,m.typingUntil,m.inCall,m.muted,m.banned FROM memberships m JOIN sessions s ON s.id=m.sessionId WHERE m.roomId=? AND m.banned=0",
+            room.id,
+          ),
+          all(
+            "SELECT r.messageId,r.sessionId,r.emoji,s.name FROM reactions r JOIN messages m ON m.id=r.messageId JOIN sessions s ON s.id=r.sessionId WHERE m.roomId=? AND m.deleted=0",
+            room.id,
+          ),
+          all(
+            "SELECT * FROM signals WHERE roomId=? AND recipientId=? AND created>? ORDER BY created ASC LIMIT 100",
+            room.id,
+            user.id,
+            now - 60000,
+          ),
+          historyFrom === null || knownVersion === String(deletedVersion)
+            ? Promise.resolve([])
+            : all(
+                "SELECT id FROM messages WHERE roomId=? AND deleted=1 AND created>=? ORDER BY created DESC LIMIT 1001",
+                room.id,
+                Number(historyFrom),
+              ),
+        ]);
       return json({
         room: safeRoom(room),
         role: member.role,
@@ -478,6 +505,9 @@ export async function handle(req: Request) {
         reactions,
         signals,
         hasMore: messages.length === 100,
+        deletedMessageIds: deletedHistory.slice(0, 1000).map((m) => m.id),
+        historyReset: deletedHistory.length > 1000,
+        deletedVersion,
       });
     }
     if (action === "leave" && method === "POST") {
@@ -638,6 +668,49 @@ export async function handle(req: Request) {
         { attachment: { id, name: f.name, mime, size: f.size } },
         201,
       );
+    }
+    if (action === "messages" && parts.length === 3 && method === "DELETE") {
+      await rate("clear-messages:" + user.id, 5);
+      // Identity and room come from the authenticated membership, never request input.
+      const result = await db().batch([
+        db()
+          .prepare(
+            "UPDATE messages SET deleted=1,text='',pinned=0 WHERE roomId=? AND senderId=? AND deleted=0",
+          )
+          .bind(room.id, user.id),
+        db()
+          .prepare(
+            "DELETE FROM revisions WHERE messageId IN (SELECT id FROM messages WHERE roomId=? AND senderId=?)",
+          )
+          .bind(room.id, user.id),
+        db()
+          .prepare(
+            "DELETE FROM reactions WHERE messageId IN (SELECT id FROM messages WHERE roomId=? AND senderId=?)",
+          )
+          .bind(room.id, user.id),
+      ]);
+      // Include previously deleted messages so an interrupted file cleanup is retryable.
+      const files = await all(
+        "SELECT DISTINCT m.attachmentId AS id FROM messages m WHERE m.roomId=? AND m.senderId=? AND m.deleted=1 AND m.attachmentId IS NOT NULL AND NOT EXISTS(SELECT 1 FROM messages live WHERE live.attachmentId=m.attachmentId AND live.deleted=0) AND NOT EXISTS(SELECT 1 FROM music_tracks t WHERE t.attachmentId=m.attachmentId)",
+        room.id,
+        user.id,
+      );
+      let cleanupPending = files.length > 0 && !env.BUCKET;
+      if (env.BUCKET)
+        for (let i = 0; i < files.length; i += 100) {
+          try {
+            await env.BUCKET.delete(
+              files.slice(i, i + 100).map((file) => file.id),
+            );
+          } catch {
+            cleanupPending = true;
+          }
+        }
+      return json({
+        ok: true,
+        deleted: result[0].meta.changes,
+        cleanupPending,
+      });
     }
     if (action === "messages" && parts.length === 3 && method === "POST") {
       if (member.muted) fail("Messaging is restricted for this identity.", 403);

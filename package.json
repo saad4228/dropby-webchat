@@ -13,7 +13,7 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "typecheck": "tsc --noEmit",
-    "test:api": "node tests/api.mjs && node tests/music-api.mjs",
+    "test:api": "node tests/api.mjs && node tests/music-api.mjs && node tests/deletion-api.mjs",
     "test:unit": "node --test tests/call-token.test.mjs tests/uploads.test.mjs tests/emoji-motion.test.mjs tests/music.test.mjs",
     "test:e2e": "playwright test"
   },

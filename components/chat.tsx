@@ -234,7 +234,14 @@ export default function Chat({
     [recordPreview, setRecordPreview] = useState<Blob | null>(null),
     [recordUrl, setRecordUrl] = useState(""),
     [older, setOlder] = useState<Msg[]>([]),
-    [olderBusy, setOlderBusy] = useState(false);
+    [olderBusy, setOlderBusy] = useState(false),
+    [deleteOpen, setDeleteOpen] = useState(false),
+    [deleting, setDeleting] = useState(false),
+    [deleteError, setDeleteError] = useState("");
+  const historyFrom = useRef<number | null>(null);
+  const historyEpoch = useRef(0);
+  const deletedVersion = useRef<number | null>(null);
+  const deletedIds = useRef(new Set<string>());
   const scroller = useRef<HTMLDivElement>(null),
     bottom = useRef<HTMLDivElement>(null),
     input = useRef<HTMLTextAreaElement>(null),
@@ -258,7 +265,38 @@ export default function Chat({
     if (demo || fetching.current) return;
     fetching.current = true;
     try {
-      const s = await api("rooms/" + slug);
+      const epoch = historyEpoch.current;
+      const s: Snapshot = await api(
+        "rooms/" +
+          slug +
+          (historyFrom.current === null
+            ? ""
+            : "?historyFrom=" +
+              historyFrom.current +
+              (deletedVersion.current === null
+                ? ""
+                : "&deletedVersion=" + deletedVersion.current)),
+      );
+      if (epoch !== historyEpoch.current) return;
+      deletedVersion.current = s.deletedVersion ?? null;
+      const removed = s.deletedMessageIds || [];
+      if (s.historyReset || removed.some((id) => !deletedIds.current.has(id)))
+        historyEpoch.current++;
+      removed.forEach((id) => deletedIds.current.add(id));
+      if (removed.length || s.historyReset) {
+        setOlder((items) =>
+          s.historyReset
+            ? []
+            : items.filter((m) => !deletedIds.current.has(m.id)),
+        );
+        setReply((m) =>
+          s.historyReset || (m && deletedIds.current.has(m.id)) ? null : m,
+        );
+        setViewer((m) =>
+          s.historyReset || (m && deletedIds.current.has(m.id)) ? null : m,
+        );
+      }
+      s.messages = s.messages.filter((m) => !deletedIds.current.has(m.id));
       setData(s);
       setOffline(false);
       setRestricted(false);
@@ -382,6 +420,22 @@ export default function Chat({
     (m, i, a) => a.findIndex((x) => x.id === m.id) === i,
   );
   const fullData = data ? { ...data, messages: allMessages } : null;
+  historyFrom.current = allMessages.length
+    ? allMessages.reduce(
+        (oldest, m) => Math.min(oldest, m.created),
+        Number.MAX_SAFE_INTEGER,
+      )
+    : null;
+  useEffect(() => {
+    if (
+      edit &&
+      (deletedIds.current.has(edit.id) ||
+        (data?.historyReset && !allMessages.some((m) => m.id === edit.id)))
+    ) {
+      setEdit(null);
+      setText("");
+    }
+  }, [edit, data, older]);
   const images = allMessages.filter((m) => m.fileMime?.startsWith("image/"));
   const viewerIndex = images.findIndex((m) => m.id === viewer?.id);
   function moveViewer(delta: number) {
@@ -551,6 +605,51 @@ export default function Chat({
       notify(e.message);
     }
   }
+  async function deleteMyMessages() {
+    if (deleting) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const result = demo
+        ? { cleanupPending: false }
+        : await api("rooms/" + slug + "/messages", undefined, "DELETE");
+      historyEpoch.current++;
+      const own = new Set(
+        allMessages.filter((m) => m.senderId === user.id).map((m) => m.id),
+      );
+      own.forEach((id) => deletedIds.current.add(id));
+      setOlder((items) => items.filter((m) => m.senderId !== user.id));
+      setData((s) =>
+        s
+          ? {
+              ...s,
+              messages: s.messages.filter((m) => m.senderId !== user.id),
+              reactions: s.reactions.filter((r) => !own.has(r.messageId)),
+            }
+          : s,
+      );
+      if (reply?.senderId === user.id) setReply(null);
+      if (edit?.senderId === user.id) {
+        setEdit(null);
+        setText("");
+      }
+      if (viewer?.senderId === user.id) setViewer(null);
+      if (result.cleanupPending) {
+        setDeleteError(
+          "Your messages are deleted. Some uploaded files could not be cleared from storage. Please try again to finish cleanup.",
+        );
+      } else {
+        setDeleteOpen(false);
+        setPanel("");
+        notify("Your messages have been deleted.");
+      }
+      await refresh();
+    } catch (e: any) {
+      setDeleteError(e.message);
+    } finally {
+      setDeleting(false);
+    }
+  }
   function uploadFile(file: File) {
     if (demo) {
       notify("Create a real room to share and save files.");
@@ -648,13 +747,18 @@ export default function Chat({
     onLeave();
   }
   async function loadOlder() {
-    if (!data || olderBusy) return;
+    if (!data || olderBusy || !allMessages.length) return;
     setOlderBusy(true);
     try {
+      const epoch = historyEpoch.current;
       const s = await api(
         "rooms/" + slug + "?before=" + allMessages[0].created,
       );
-      setOlder((a) => [...s.messages, ...a]);
+      if (epoch !== historyEpoch.current) return;
+      setOlder((a) => [
+        ...s.messages.filter((m: Msg) => !deletedIds.current.has(m.id)),
+        ...a,
+      ]);
       if (!s.hasMore) setData((d) => (d ? { ...d, hasMore: false } : d));
     } catch (e: any) {
       notify(e.message);
@@ -1276,6 +1380,10 @@ export default function Chat({
           onView={setViewer}
           onLeave={leave}
           onIdentity={onIdentity}
+          onDeleteMessages={() => {
+            setDeleteError("");
+            setDeleteOpen(true);
+          }}
           demo={demo}
           dark={dark}
           onDark={onDark}
@@ -1287,6 +1395,52 @@ export default function Chat({
           user={user}
           members={data?.members.filter((m) => m.online && m.inCall) || []}
         />
+      )}
+      {deleteOpen && (
+        <Modal
+          className="delete-messages-dialog"
+          onClose={() => {
+            if (!deleting) setDeleteOpen(false);
+          }}
+        >
+          <span className="delete-messages-icon">
+            <Trash2 size={25} />
+          </span>
+          <h2>Delete all your messages?</h2>
+          <p>
+            Your messages and chat attachments in <strong>{slug}</strong> will
+            be removed for everyone in this room, including older history. This
+            can’t be undone.
+          </p>
+          {deleteError && (
+            <p className="delete-messages-error" role="alert">
+              {deleteError}
+            </p>
+          )}
+          <div className="delete-messages-actions">
+            <button
+              className="secondary"
+              data-autofocus
+              disabled={deleting}
+              onClick={() => setDeleteOpen(false)}
+            >
+              Keep my messages
+            </button>
+            <button
+              className="delete-messages-confirm"
+              disabled={deleting}
+              onClick={deleteMyMessages}
+            >
+              {deleting ? (
+                <>
+                  <LoaderCircle size={16} className="spin" /> Deleting…
+                </>
+              ) : (
+                "Delete my messages"
+              )}
+            </button>
+          </div>
+        </Modal>
       )}
       {viewer && (
         <Modal className="media-viewer" onClose={() => setViewer(null)}>

@@ -93,6 +93,9 @@ export type Snapshot = {
   }[];
   signals: any[];
   hasMore: boolean;
+  deletedMessageIds?: string[];
+  historyReset?: boolean;
+  deletedVersion?: number;
 };
 export const avatars = [
   "🏔️",

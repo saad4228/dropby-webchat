@@ -1,0 +1,92 @@
+.chat-app {
+  --clear-ink: #a12d43;
+  --clear-soft: #fff0f3;
+}
+[data-mode="dark"] .chat-app {
+  --clear-ink: #ffb4c0;
+  --clear-soft: #4a2d3d;
+}
+.chat-app .room-options > .danger {
+  color: var(--clear-ink);
+}
+.chat-app .delete-messages-dialog {
+  width: 440px;
+  max-width: calc(100vw - 28px);
+  padding: 30px;
+  border: 1px solid var(--room-line);
+  border-radius: 24px;
+  background: var(--room-panel);
+  color: var(--room-ink);
+  box-shadow: 0 24px 80px #09142844;
+}
+.delete-messages-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 17px;
+  background: var(--clear-soft);
+  color: var(--clear-ink);
+  margin-bottom: 20px;
+}
+.delete-messages-dialog h2 {
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.7px;
+  padding-right: 15px;
+}
+.delete-messages-dialog > p {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--room-muted);
+}
+.delete-messages-dialog strong {
+  color: var(--room-ink);
+  overflow-wrap: anywhere;
+}
+.delete-messages-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 26px;
+}
+.delete-messages-actions > button {
+  min-height: 46px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 650;
+  gap: 7px;
+}
+.delete-messages-actions > .secondary {
+  background: var(--room-soft);
+  color: var(--room-ink);
+  border: 1px solid var(--room-line);
+}
+.delete-messages-confirm {
+  background: #ae2946;
+  color: #fff;
+  border: 1px solid #ae2946;
+}
+.delete-messages-confirm:hover:not(:disabled) {
+  background: #93233c;
+}
+.delete-messages-actions > button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.delete-messages-dialog > .delete-messages-error {
+  color: var(--clear-ink);
+  background: var(--clear-soft);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+@media (max-width: 400px) {
+  .chat-app .delete-messages-dialog {
+    padding: 25px;
+  }
+  .delete-messages-actions {
+    grid-template-columns: 1fr;
+  }
+}
