@@ -1,0 +1,184 @@
+/* Pastel cabinet glass by day, violet glass and cyan edges after dark. */
+.chat-app.theme-arcade {
+  --conversation-surface: color-mix(
+    in srgb,
+    var(--room-panel) calc(var(--glass-opacity, 0.87) * 82%),
+    transparent
+  );
+  --panel-action-bg: var(--room-soft);
+  --panel-action-ink: var(--room-ink);
+  --panel-action-border: var(--room-line);
+  --arcade-shadow: #3614452b;
+  --arcade-highlight: #fff8ffd1;
+  --arcade-edge: #087d9847;
+  --arcade-cyan: #086d86;
+  --arcade-chrome: color-mix(in srgb, var(--room-panel) 94%, transparent);
+}
+[data-mode="dark"] .chat-app.theme-arcade {
+  --conversation-surface: color-mix(
+    in srgb,
+    var(--room-panel) calc(var(--glass-opacity, 0.87) * 72%),
+    transparent
+  );
+  --arcade-shadow: #09031266;
+  --arcade-highlight: #f7b2ff26;
+  --arcade-edge: #77e9fc57;
+  --arcade-cyan: #8fe9f8;
+}
+.chat-app.theme-arcade .room-header,
+.chat-app.theme-arcade .conversation-shell,
+.chat-app.theme-arcade .room-rail {
+  border-radius: 18px;
+  box-shadow:
+    0 10px 35px var(--arcade-shadow),
+    inset 0 1px var(--arcade-highlight);
+}
+.chat-app.theme-arcade .room-header {
+  border-bottom-color: var(--arcade-edge);
+}
+.chat-app.theme-arcade .conversation-shell,
+.chat-app.theme-arcade .room-rail {
+  border-color: var(--arcade-edge);
+}
+.chat-app.theme-arcade .conversation-toolbar {
+  background: var(--arcade-chrome);
+  border-radius: 17px 17px 0 0;
+  padding-block: 9px;
+}
+.chat-app.theme-arcade .conversation-heading,
+.chat-app.theme-arcade .header-room-tag,
+.chat-app.theme-arcade .chat-date > span {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+.chat-app.theme-arcade .conversation-heading {
+  color: var(--room-ink);
+}
+.chat-app.theme-arcade .conversation-heading > svg {
+  color: var(--arcade-cyan);
+}
+.chat-app.theme-arcade .header-room-tag {
+  font-size: 8px;
+  border-radius: 6px;
+}
+.chat-app.theme-arcade .conversation-toolbar > .music-dock {
+  background: var(--room-soft);
+  border-color: var(--arcade-edge);
+  border-radius: 10px;
+}
+.chat-app.theme-arcade .music-record {
+  color: var(--arcade-cyan);
+  background: var(--room-panel);
+  border-radius: 7px;
+}
+.chat-app.theme-arcade .music-panel,
+.chat-app.theme-arcade .room-panel,
+.chat-app.theme-arcade .message-menu,
+.chat-app.theme-arcade .emoji-picker {
+  border-color: var(--arcade-edge);
+  border-radius: 16px;
+  box-shadow: 0 16px 50px var(--arcade-shadow);
+}
+.chat-app.theme-arcade .conversation-shell .composer-area {
+  background: var(--arcade-chrome);
+  border-top: 1px solid var(--arcade-edge);
+  border-radius: 0 0 17px 17px;
+}
+.chat-app.theme-arcade .composer {
+  border-radius: 12px;
+  background: var(--room-panel);
+  box-shadow: 0 3px 15px var(--arcade-shadow);
+}
+.chat-app.theme-arcade .composer:focus-within {
+  border-color: var(--arcade-cyan);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--arcade-cyan) 12%, transparent);
+}
+.chat-app.theme-arcade .send-button,
+.chat-app.theme-arcade .attach-button,
+.chat-app.theme-arcade .room-home,
+.chat-app.theme-arcade .room-welcome-icon,
+.chat-app.theme-arcade .rail-item {
+  border-radius: 9px;
+}
+.chat-app.theme-arcade .rail-item.active {
+  box-shadow: inset 0 0 0 1px var(--arcade-edge);
+}
+.chat-app.theme-arcade .message-bubble {
+  border-color: var(--arcade-edge);
+  box-shadow: 2px 3px 0 var(--arcade-shadow);
+}
+.chat-app.theme-arcade .own .message-bubble {
+  border-color: var(--arcade-highlight);
+  box-shadow: 2px 3px 0 var(--arcade-shadow);
+}
+.chat-app.theme-arcade .message-bubble.emoji-only {
+  border-color: transparent;
+  box-shadow: none;
+}
+.chat-app.theme-arcade .message-byline,
+.chat-app.theme-arcade .message-receipt,
+.chat-app.theme-arcade .typing-indicator {
+  text-shadow:
+    0 1px 5px var(--room-panel),
+    0 0 10px var(--room-panel);
+}
+.chat-app.theme-arcade .message-reactions button {
+  background: var(--room-panel);
+  border-radius: 7px;
+}
+.chat-app.theme-arcade .message-reactions button.mine {
+  background: var(--room-soft);
+}
+.chat-app.theme-arcade .has-conversation .room-welcome {
+  background: var(--arcade-chrome);
+  border-radius: 12px;
+  border-left: 3px solid var(--arcade-cyan);
+}
+.chat-app.theme-arcade .chat-date > span {
+  background: var(--room-panel);
+  border-radius: 5px;
+}
+.scene-arcade .arcade-grid,
+.scene-arcade .arcade-sun,
+.scene-arcade .arcade-corner {
+  display: none;
+}
+.scene-arcade .arcade-pixel {
+  color: var(--arcade-cyan);
+  opacity: 0.13;
+  font-size: 17px;
+}
+.theme-thumb.theme-arcade:before {
+  background: url("/themes/arcade-light.png") center / cover;
+}
+[data-mode="dark"] .theme-thumb.theme-arcade:before {
+  background-image: url("/themes/arcade-dark.png");
+}
+.theme-thumb.theme-arcade b {
+  background: #fff7fc;
+}
+.theme-thumb.theme-arcade b:nth-child(2) {
+  background: #82368f;
+}
+[data-mode="dark"] .theme-thumb.theme-arcade b {
+  background: #30203f;
+}
+[data-mode="dark"] .theme-thumb.theme-arcade b:nth-child(2) {
+  background: #893598;
+}
+@media (max-width: 700px) {
+  .chat-app.theme-arcade .room-header,
+  .chat-app.theme-arcade .conversation-shell {
+    border-radius: 16px;
+  }
+  .chat-app.theme-arcade .conversation-toolbar {
+    border-radius: 15px 15px 0 0;
+    padding-block: 7px;
+  }
+  .chat-app.theme-arcade .conversation-shell .composer-area {
+    border-radius: 0 0 15px 15px;
+  }
+}

@@ -424,31 +424,46 @@
   opacity: 1;
   mix-blend-mode: normal;
 }
-/* Retro arcade: geometric bubbles, a pixel grid, and mint-lit controls. */
+/* Retro arcade: warm daylight and neon nights in the supplied arcade lounge. */
 .chat-app.theme-arcade {
-  --accent: #79e1cf;
-  --accent-ink: #102d33;
-  --sent: linear-gradient(110deg, #286470, #3c5576);
-  --sent-text: #f4fffc;
-  --received: #27384c;
-  --received-text: #e4f7f5;
-  --room-panel: rgba(20, 34, 49, 0.98);
-  --room-header: rgba(23, 37, 53, var(--glass-opacity, 0.96));
-  --room-soft: #30485c;
-  --room-line: #8bc9cd40;
-  --room-ink: #e7f7f5;
-  --room-muted: #adcbd0;
-  --room-canvas: #101e3528;
+  --accent: #7741a8;
+  --accent-ink: #fff;
+  --sent: linear-gradient(110deg, #82368f, #4c46a5);
+  --sent-text: #fff;
+  --received: #fff7fc;
+  --received-text: #352343;
+  --room-panel: rgba(255, 246, 253, 0.98);
+  --room-header: rgba(255, 244, 252, var(--glass-opacity, 0.94));
+  --room-soft: #f1e1ef;
+  --room-line: #85508c38;
+  --room-ink: #352343;
+  --room-muted: #503855;
+  --room-canvas: #fff3fa66;
+}
+[data-mode="dark"] .chat-app.theme-arcade {
+  --accent: #8fe9f8;
+  --accent-ink: #17223c;
+  --sent: linear-gradient(110deg, #893598, #4a4faa);
+  --received: #30203f;
+  --received-text: #fff0ff;
+  --room-panel: rgba(29, 17, 43, 0.98);
+  --room-header: rgba(30, 18, 44, var(--glass-opacity, 0.94));
+  --room-soft: #403050;
+  --room-line: #c69ce43d;
+  --room-ink: #fff0ff;
+  --room-muted: #dec1e7;
+  --room-canvas: #1c122b59;
 }
 .chat-app.theme-arcade > .chat-scenery {
   filter: none;
   background:
-    linear-gradient(155deg, #17243cdd, #21394be6),
-    var(
-      --custom-wallpaper,
-      radial-gradient(ellipse at 55% 30%, #654679, #14353f)
-    );
-  background-size: cover;
+    linear-gradient(155deg, #ffeafa0d, #ffe9f51a),
+    var(--custom-wallpaper, url("/themes/arcade-light.png")) center / cover;
+}
+[data-mode="dark"] .chat-app.theme-arcade > .chat-scenery {
+  background:
+    linear-gradient(155deg, #140a200d, #140a2026),
+    var(--custom-wallpaper, url("/themes/arcade-dark.png")) center / cover;
 }
 .chat-app.theme-arcade > .chat-scenery:after {
   background: none;
@@ -457,17 +472,16 @@
 .theme-arcade .message-bubble,
 .theme-arcade .own .message-bubble {
   border-radius: 5px;
-  padding: 13px 16px;
   border-width: 1px;
   box-shadow: 3px 3px 0 #0c1a2b33;
 }
 .theme-arcade .room-header {
   border-radius: 10px;
-  border-bottom: 2px solid #79e1cf66;
+  border-bottom: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .theme-arcade .composer {
   border-radius: 10px;
-  border-bottom: 2px solid #79e1cf66;
+  border-bottom: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .theme-arcade .composer-input,
 .theme-arcade .send-button {

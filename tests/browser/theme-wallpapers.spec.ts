@@ -19,6 +19,7 @@ function contrast(a: string, b: string) {
 for (const { theme, name } of [
   { theme: "love", name: "Love letters" },
   { theme: "football", name: "Football night" },
+  { theme: "arcade", name: "Retro arcade" },
 ]) {
   test(`${name} uses the supplied day/night artwork, readable messages and working compact controls`, async ({
     page,
