@@ -3,8 +3,12 @@ import assert from "node:assert/strict";
 import { emojiGroups } from "../lib/emojis.ts";
 import { emojiMotion, emojiTokens, emojiOnly } from "../lib/emoji-motion.ts";
 import { themes, themeIds, getTheme } from "../lib/themes.ts";
+import {
+  emojiExpression,
+  EMOJI_EXPRESSION_DURATION,
+} from "../lib/emoji-expressions.ts";
 
-test("Every picker emoji is a single animated grapheme with a valid motion", () => {
+test("Every supported message emoji stays a single grapheme with a valid fallback motion", () => {
   const motions = [
     "heartbeat",
     "bounce",
@@ -24,6 +28,19 @@ test("Every picker emoji is a single animated grapheme with a valid motion", () 
     );
     assert.ok(motions.includes(emojiMotion(emoji)), emoji);
   }
+});
+test("Sent faces match the emotion and use a short performance", () => {
+  assert.equal(emojiExpression("😭"), "sob");
+  assert.equal(emojiExpression("😢"), "cry");
+  assert.equal(emojiExpression("😂"), "laugh-tears");
+  assert.equal(emojiExpression("🤣"), "laugh");
+  assert.equal(emojiExpression("😴"), "sleep");
+  assert.equal(emojiExpression("😍"), "love");
+  assert.equal(emojiExpression("⚽"), null);
+  assert.equal(emojiExpression("👨‍👩‍👧‍👦"), null);
+  assert.ok(
+    EMOJI_EXPRESSION_DURATION >= 1000 && EMOJI_EXPRESSION_DURATION <= 2000,
+  );
 });
 test("Joined emoji, skin tones, flags and keycaps stay intact and text is preserved", () => {
   for (const emoji of ["👨‍👩‍👧‍👦", "👩🏽‍🚀", "🇮🇳", "1️⃣", "❤️‍🔥"]) {

@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { emojiGroups, allEmojis } from "../lib/emojis";
-import { burstEmoji, EmojiGlyph } from "./animated-emoji";
 export function EmojiPicker({
   onSelect,
   onClose,
@@ -95,12 +94,9 @@ export function EmojiPicker({
           <button
             key={e}
             aria-label={"Insert " + e}
-            onClick={(event) => {
-              burstEmoji(e, event.currentTarget);
-              onSelect(e);
-            }}
+            onClick={() => onSelect(e)}
           >
-            <EmojiGlyph emoji={e} />
+            {e}
           </button>
         ))}
       </div>

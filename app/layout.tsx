@@ -5,6 +5,7 @@ import "./refinements.css";
 import "./polish.css";
 import "./readability.css";
 import "./expressive.css";
+import "./emoji-expressions.css";
 import "./creator.css";
 import "./harmony.css";
 import "./music.css";

@@ -50,7 +50,7 @@ import CallPanel from "./call-panel";
 import { useCall } from "../hooks/use-call";
 import { Modal } from "./modal";
 import { getTheme } from "../lib/themes";
-import { EmojiEffects } from "./animated-emoji";
+import { EmojiMotionControl } from "./animated-emoji";
 import { ThemeScene } from "./theme-scene";
 import RoomMusic from "./room-music";
 const time = Date.now() - 8 * 60000;
@@ -695,7 +695,7 @@ export default function Chat({
     >
       <div className="chat-scenery" />
       <ThemeScene theme={theme} />
-      <EmojiEffects enabled={appearance.animations} />
+      <EmojiMotionControl enabled={appearance.animations} />
       <header className="room-header">
         <button className="room-home" aria-label="Back to home" onClick={leave}>
           {data ? (

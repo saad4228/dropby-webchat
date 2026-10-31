@@ -5,6 +5,11 @@ import {
   emojiTokens,
   type EmojiMotion,
 } from "../lib/emoji-motion";
+import {
+  emojiExpression,
+  EMOJI_EXPRESSION_DURATION,
+} from "../lib/emoji-expressions";
+import { EmojiFace } from "./emoji-face";
 const frames: Record<EmojiMotion, Keyframe[]> = {
   heartbeat: [
     { transform: "scale(1)" },
@@ -60,75 +65,92 @@ function allowed(element?: Element | null) {
     !element?.closest(".motion-off")
   );
 }
-export function burstEmoji(emoji: string, element: Element) {
-  if (!allowed(element)) return;
-  const box = element.getBoundingClientRect();
-  window.dispatchEvent(
-    new CustomEvent("dropby:emoji-burst", {
-      detail: { emoji, x: box.x + box.width / 2, y: box.y + box.height / 2 },
-    }),
-  );
-}
 export function EmojiGlyph({ emoji }: { emoji: string }) {
-  return (
-    <span className={"emoji-glyph emoji-motion-" + emojiMotion(emoji)}>
-      {emoji}
-    </span>
-  );
+  return <span className="emoji-glyph">{emoji}</span>;
 }
 export function AnimatedEmoji({
   emoji,
   large = false,
+  animateOnMount = true,
 }: {
   emoji: string;
   large?: boolean;
+  animateOnMount?: boolean;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [expressing, setExpressing] = useState(false),
+    [run, setRun] = useState(0);
+  const expression = emojiExpression(emoji);
+  function stop() {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    ref.current
+      ?.querySelector(".emoji-glyph")
+      ?.getAnimations()
+      .forEach((a) => a.cancel());
+    setExpressing(false);
+  }
   function play() {
     const node = ref.current?.querySelector<HTMLElement>(".emoji-glyph");
     if (!node || !allowed(ref.current)) return;
-    node.getAnimations().forEach((a) => a.cancel());
-    node.animate(frames[emojiMotion(emoji)], {
-      duration: emojiMotion(emoji) === "spin" ? 950 : 780,
-      easing: "cubic-bezier(.22,.7,.3,1)",
-      iterations: large ? 2 : 1,
-    });
+    stop();
+    setRun((r) => r + 1);
+    setExpressing(true);
+    if (!expression)
+      node.animate(frames[emojiMotion(emoji)], {
+        duration: EMOJI_EXPRESSION_DURATION / 2,
+        easing: "cubic-bezier(.22,.7,.3,1)",
+        iterations: 2,
+      });
+    timer.current = setTimeout(stop, EMOJI_EXPRESSION_DURATION);
   }
   useEffect(() => {
-    play();
-    return () =>
-      ref.current
+    const node = ref.current;
+    if (animateOnMount) play();
+    window.addEventListener("dropby:stop-emoji", stop);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+      node
         ?.querySelector(".emoji-glyph")
         ?.getAnimations()
         .forEach((a) => a.cancel());
-  }, [emoji, large]);
+      window.removeEventListener("dropby:stop-emoji", stop);
+    };
+  }, [emoji, animateOnMount]);
   return (
     <button
       ref={ref}
       type="button"
-      className={"animated-emoji " + (large ? "large-emoji" : "")}
+      className={
+        "animated-emoji " +
+        (large ? "large-emoji " : "") +
+        (expression ? "has-face" : "")
+      }
+      data-expressing={expressing ? "true" : undefined}
       aria-label={"Animate " + emoji}
       title="Tap to animate"
-      onPointerEnter={(e) => {
-        if (e.pointerType === "mouse") play();
-      }}
       onClick={(e) => {
         e.stopPropagation();
         play();
-        burstEmoji(emoji, e.currentTarget);
       }}
       onDoubleClick={(e) => e.stopPropagation()}
     >
       <EmojiGlyph emoji={emoji} />
+      {expression && expressing && (
+        <EmojiFace key={run} expression={expression} emoji={emoji} />
+      )}
     </button>
   );
 }
 export function EmojiText({
   text,
   large = false,
+  animateOnMount = true,
 }: {
   text: string;
   large?: boolean;
+  animateOnMount?: boolean;
 }) {
   return (
     <>
@@ -138,6 +160,7 @@ export function EmojiText({
             key={i + ":" + t.value}
             emoji={t.value}
             large={large}
+            animateOnMount={animateOnMount}
           />
         ) : (
           t.value
@@ -146,70 +169,16 @@ export function EmojiText({
     </>
   );
 }
-type Burst = { id: number; emoji: string; x: number; y: number };
-export function EmojiEffects({ enabled = true }: { enabled?: boolean }) {
-  const [bursts, setBursts] = useState<Burst[]>([]),
-    next = useRef(0),
-    timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+export function EmojiMotionControl({ enabled = true }: { enabled?: boolean }) {
   useEffect(() => {
-    if (!enabled) {
-      setBursts([]);
-      document
-        .querySelectorAll(".chat-app.motion-off .emoji-glyph")
-        .forEach((el) =>
-          el.getAnimations().forEach((animation) => animation.cancel()),
-        );
-      return;
-    }
-    const listener = (event: Event) => {
-      if (!allowed()) return;
-      const detail = (event as CustomEvent).detail,
-        id = next.current++;
-      setBursts((b) => [...b.slice(-3), { ...detail, id }]);
-      const timer = setTimeout(() => {
-        setBursts((b) => b.filter((x) => x.id !== id));
-        timers.current.delete(timer);
-      }, 1450);
-      timers.current.add(timer);
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const stop = () => {
+      if (!enabled || query.matches)
+        window.dispatchEvent(new Event("dropby:stop-emoji"));
     };
-    window.addEventListener("dropby:emoji-burst", listener);
-    return () => {
-      window.removeEventListener("dropby:emoji-burst", listener);
-      timers.current.forEach(clearTimeout);
-      timers.current.clear();
-    };
+    stop();
+    query.addEventListener("change", stop);
+    return () => query.removeEventListener("change", stop);
   }, [enabled]);
-  return (
-    <div className="emoji-effects" aria-hidden="true">
-      {bursts.map((b) => (
-        <div
-          className={"emoji-burst burst-" + emojiMotion(b.emoji)}
-          key={b.id}
-          style={{ left: b.x, top: b.y }}
-        >
-          <span className="burst-ring" />
-          {Array.from({ length: 8 }, (_, i) => {
-            const angle = (i * Math.PI) / 4,
-              distance = 55 + (i % 3) * 18;
-            return (
-              <span
-                className="emoji-particle"
-                key={i}
-                style={
-                  {
-                    "--dx": Math.cos(angle) * distance + "px",
-                    "--dy": Math.sin(angle) * distance - 35 + "px",
-                    "--turn": (i % 2 ? 30 : -30) + "deg",
-                    "--delay": i * 18 + "ms",
-                  } as React.CSSProperties
-                }
-              >
-                {i % 3 === 0 ? "✨" : b.emoji}
-              </span>
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  );
+  return null;
 }

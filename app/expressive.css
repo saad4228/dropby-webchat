@@ -725,68 +725,9 @@
 .emoji-picker-grid button .emoji-glyph {
   font-size: 25px;
 }
-.emoji-picker-grid button:hover .emoji-glyph,
-.emoji-picker-grid button:focus-visible .emoji-glyph {
-  animation: emoji-preview 0.7s ease-in-out infinite alternate;
-}
-.emoji-picker-grid button:hover .emoji-motion-heartbeat {
-  animation-name: emoji-heartbeat;
-}
-.emoji-picker-grid button:hover .emoji-motion-spin {
-  animation-name: emoji-spin;
-  animation-duration: 1.2s;
-  animation-timing-function: linear;
-}
-.emoji-picker-grid button:hover .emoji-motion-float {
-  animation-name: emoji-float;
-  animation-duration: 1.4s;
-}
-.emoji-effects {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  pointer-events: none;
-  overflow: hidden;
-}
-.emoji-burst {
-  position: absolute;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-}
-.emoji-particle {
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: block;
-  font-size: 24px;
-  line-height: 1;
-  animation: emoji-scatter 1.25s cubic-bezier(0.16, 0.6, 0.28, 1)
-    var(--delay, 0ms) both;
-}
-.burst-ring {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  left: -15px;
-  top: -15px;
-  border: 2px solid var(--accent);
-  border-radius: 50%;
-  opacity: 0.5;
-  animation: emoji-ring 0.75s ease-out both;
-}
-.burst-heartbeat .emoji-particle {
-  font-size: 25px;
-}
-.burst-spin .emoji-particle {
-  font-size: 21px;
-}
 .motion-off .theme-scene *,
 .motion-off .emoji-glyph {
   animation: none !important;
-}
-.motion-off .emoji-effects {
-  display: none;
 }
 .onboarding-cover > .onboarding-emblem {
   width: 60px;

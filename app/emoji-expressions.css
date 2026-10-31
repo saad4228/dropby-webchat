@@ -1,0 +1,459 @@
+/* Expression artwork exists only during a sent-message's 1.8 second performance. */
+.sent-emoji-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.4em;
+  height: 1.4em;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  pointer-events: none;
+}
+.animated-emoji.has-face[data-expressing="true"] > .emoji-glyph {
+  opacity: 0;
+}
+.face-mouth {
+  transform-origin: 36px 46px;
+}
+.face-eyes {
+  transform-origin: 36px 31px;
+}
+.face-blinking-eyes {
+  transform-origin: 36px 31px;
+  animation: face-blink 1.8s ease-in-out both;
+}
+.face-happy-eyes {
+  transform-origin: 36px 30px;
+  animation: eyes-laugh 0.6s ease-in-out 3;
+}
+.expression-laugh .face-mouth,
+.expression-laugh-tears .face-mouth,
+.expression-party .face-mouth {
+  animation: mouth-laugh 0.45s ease-in-out 4;
+}
+.expression-laugh .face-body,
+.expression-laugh-tears .face-body {
+  transform-origin: 36px 38px;
+  animation: laughter-rock 0.45s ease-in-out 4;
+}
+.rolling-laugh .face-body {
+  animation: rolling-laughter 0.6s ease-in-out 3;
+}
+.face-smiling-mouth {
+  transform-origin: 36px 44px;
+  animation: smile-grow 0.9s ease-in-out 2;
+}
+.expression-cry .face-mouth,
+.expression-sob .face-mouth {
+  animation: sob-mouth 0.45s ease-in-out 4;
+}
+.expression-sob .face-eyes,
+.expression-cry .face-eyes {
+  animation: sob-eyes 0.45s ease-in-out 4;
+}
+.tear-drop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tear-fall 0.6s cubic-bezier(0.4, 0, 0.8, 0.8) 3 both;
+}
+.tear-drop-1 {
+  animation-delay: 0.13s;
+}
+.tear-stream {
+  transform-origin: center 34px;
+  animation: tear-flow 0.45s ease-in-out 4;
+}
+.tear-ripple {
+  animation: tear-ripple 0.45s linear 4;
+}
+.expression-laugh-tears .tear-drop {
+  animation-name: happy-tear;
+}
+.face-love-eyes {
+  transform-origin: 36px 32px;
+  animation: loving-eyes 0.6s ease-in-out 3;
+}
+.face-kissing-mouth {
+  transform-origin: 36px 47px;
+  animation: kiss-pucker 0.6s ease-in-out 3;
+}
+.face-kiss-heart {
+  transform-origin: 54px 40px;
+  animation: kiss-heart 0.9s ease-out 2 both;
+}
+.face-tongue {
+  transform-origin: 36px 49px;
+  animation: tongue-wag 0.45s ease-in-out 4;
+}
+.face-o-mouth {
+  transform-origin: 36px 48px;
+  animation: mouth-gasp 0.9s ease-in-out 2;
+}
+.face-wide-eyes {
+  transform-origin: 36px 31px;
+  animation: eyes-widen 0.9s ease-in-out 2;
+}
+.face-sleep-z {
+  animation: sleep-z 0.9s ease-out 2 both;
+}
+.expression-sleep .face-body {
+  transform-origin: 36px 36px;
+  animation: sleep-breathe 1.8s ease-in-out;
+}
+.expression-angry .face-brows {
+  transform-origin: 36px 25px;
+  animation: angry-brows 0.6s ease-in-out 3;
+}
+.face-anger-mark {
+  animation: anger-mark 0.6s ease-in-out 3;
+}
+.face-sweat {
+  animation: sweat-slide 0.9s ease-in 2 both;
+}
+.expression-cold .face-mouth {
+  animation: teeth-chatter 0.12s ease-in-out 15;
+}
+.expression-sick .face-mouth {
+  animation: queasy-mouth 0.6s ease-in-out 3;
+}
+.expression-think .face-hand {
+  animation: thinking-hand 0.6s ease-in-out 3;
+}
+.expression-shy .face-hand,
+.expression-shush .face-hand {
+  animation: shy-hand 0.9s ease-in-out 2;
+}
+.face-confetti {
+  transform-origin: 36px 36px;
+  animation: party-confetti 0.6s ease-out 3;
+}
+.shade-glint {
+  animation: shade-glint 0.9s ease-in-out 2;
+}
+.face-zip {
+  animation: zip-mouth 0.9s ease-in-out 2;
+}
+.motion-off .sent-emoji-art {
+  display: none;
+}
+.motion-off .animated-emoji > .emoji-glyph {
+  opacity: 1 !important;
+}
+/* The picker and reaction choices remain still, including hover and keyboard focus. */
+.emoji-picker-grid button,
+.emoji-picker-grid button:hover,
+.emoji-picker-grid button:focus-visible,
+.reaction-picker button {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+.emoji-picker-grid button > * {
+  animation: none !important;
+  transform: none !important;
+}
+@keyframes face-blink {
+  0%,
+  38%,
+  48%,
+  100% {
+    transform: scaleY(1);
+  }
+  42%,
+  45% {
+    transform: scaleY(0.15);
+  }
+}
+@keyframes eyes-laugh {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.7) translateY(-0.6px);
+  }
+}
+@keyframes mouth-laugh {
+  0%,
+  100% {
+    transform: scaleY(0.8);
+  }
+  45% {
+    transform: scaleY(1.16);
+  }
+}
+@keyframes laughter-rock {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes rolling-laughter {
+  0%,
+  100% {
+    transform: rotate(-13deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
+}
+@keyframes smile-grow {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12, 1.18);
+  }
+}
+@keyframes sob-mouth {
+  0%,
+  100% {
+    transform: scaleX(0.9) scaleY(0.96);
+  }
+  50% {
+    transform: translateY(1px) scaleX(1.12) scaleY(1.12);
+  }
+}
+@keyframes sob-eyes {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(0.8px);
+  }
+}
+@keyframes tear-fall {
+  0% {
+    transform: translateY(0) scaleY(0.6);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(15px) scaleY(1.2);
+    opacity: 0;
+  }
+}
+@keyframes happy-tear {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(11px) scale(1);
+    opacity: 0;
+  }
+}
+@keyframes tear-flow {
+  0%,
+  100% {
+    transform: scaleY(0.92);
+  }
+  50% {
+    transform: scaleY(1.08);
+  }
+}
+@keyframes tear-ripple {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+@keyframes loving-eyes {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.16);
+  }
+}
+@keyframes kiss-pucker {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.65) translateX(2px);
+  }
+}
+@keyframes kiss-heart {
+  0% {
+    transform: translate(0, 0) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(6px, -10px) scale(1.1);
+    opacity: 0;
+  }
+}
+@keyframes tongue-wag {
+  0%,
+  100% {
+    transform: rotate(-4deg) scaleY(0.85);
+  }
+  50% {
+    transform: rotate(5deg) scaleY(1.08);
+  }
+}
+@keyframes mouth-gasp {
+  0%,
+  100% {
+    transform: scale(0.85);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+@keyframes eyes-widen {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.1);
+  }
+}
+@keyframes sleep-z {
+  0% {
+    transform: translate(-2px, 3px);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(2px, -3px);
+    opacity: 0;
+  }
+}
+@keyframes sleep-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.025, 0.985);
+  }
+}
+@keyframes angry-brows {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(1.3px);
+  }
+}
+@keyframes anger-mark {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes sweat-slide {
+  0% {
+    transform: translateY(-2px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+}
+@keyframes teeth-chatter {
+  0%,
+  100% {
+    transform: translateY(-0.6px);
+  }
+  50% {
+    transform: translateY(0.6px);
+  }
+}
+@keyframes queasy-mouth {
+  0%,
+  100% {
+    transform: translateX(-1px);
+  }
+  50% {
+    transform: translateX(1px);
+  }
+}
+@keyframes thinking-hand {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-1px, -2px);
+  }
+}
+@keyframes shy-hand {
+  0%,
+  100% {
+    transform: translateY(1px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes party-confetti {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+  55% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 0.3;
+  }
+}
+@keyframes shade-glint {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+@keyframes zip-mouth {
+  0%,
+  100% {
+    stroke-dasharray: 0 4;
+  }
+  50% {
+    stroke-dasharray: 4 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sent-emoji-art {
+    display: none;
+  }
+  .animated-emoji > .emoji-glyph {
+    opacity: 1 !important;
+  }
+}

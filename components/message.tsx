@@ -18,7 +18,7 @@ import {
 import { Avatar } from "./brand";
 import { EmojiPicker } from "./emoji-picker";
 import { Message as Msg, Identity, Snapshot } from "../lib/client";
-import { EmojiText, EmojiGlyph, burstEmoji } from "./animated-emoji";
+import { EmojiText, EmojiGlyph } from "./animated-emoji";
 import { emojiOnly } from "../lib/emoji-motion";
 function VoicePlayer({ src }: { src: string }) {
   const ref = useRef<HTMLAudioElement>(null),
@@ -276,7 +276,12 @@ export default function Message({
                     {part}
                   </a>
                 ) : (
-                  <EmojiText key={i} text={part} large={largeEmoji} />
+                  <EmojiText
+                    key={i}
+                    text={part}
+                    large={largeEmoji}
+                    animateOnMount={Date.now() - m.created < 10000}
+                  />
                 ),
               )}
             </p>
@@ -295,10 +300,7 @@ export default function Message({
                     ? "mine"
                     : ""
                 }
-                onClick={(e) => {
-                  burstEmoji(emoji, e.currentTarget);
-                  onAction("reaction", m, emoji);
-                }}
+                onClick={() => onAction("reaction", m, emoji)}
                 title={reactions
                   .filter((r) => r.emoji === emoji)
                   .map((r) => r.name)

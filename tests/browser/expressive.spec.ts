@@ -131,7 +131,9 @@ test("New room themes change the design, persist and keep emoji effects optional
   await standalone
     .getByRole("button", { name: "Animate ❤️", exact: true })
     .click();
-  await expect(page.locator(".emoji-burst")).toHaveCount(1);
+  await expect(
+    standalone.getByRole("button", { name: "Animate ❤️", exact: true }),
+  ).toHaveAttribute("data-expressing", "true");
   expect(
     await standalone
       .locator(".emoji-glyph")
