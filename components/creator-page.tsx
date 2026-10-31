@@ -77,9 +77,9 @@ export default function CreatorPage() {
           <aside className="creator-profile-card">
             <div
               className="creator-monogram"
-              aria-label="Mohammad Saad initials"
+              aria-label="Mohammad Saad profile"
             >
-              <span>MS</span>
+              <img src={creator.image} alt="Saad’s profile illustration" />
               <i>
                 <Code2 size={19} />
               </i>

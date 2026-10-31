@@ -19,12 +19,10 @@ test("Creator navigation, contact links and readable creation mark work on deskt
       page.getByRole("heading", { name: "A new little corner." }),
     ).toBeVisible();
     await expect(page.locator(".onboarding-emblem svg")).toBeVisible();
-    const mark = await page
-      .locator(".onboarding-emblem")
-      .evaluate((el) => ({
-        background: getComputedStyle(el).backgroundColor,
-        color: getComputedStyle(el).color,
-      }));
+    const mark = await page.locator(".onboarding-emblem").evaluate((el) => ({
+      background: getComputedStyle(el).backgroundColor,
+      color: getComputedStyle(el).color,
+    }));
     expect(mark.background).not.toBe(mark.color);
     await page
       .getByRole("button", { name: "Close dialog", exact: true })
@@ -42,6 +40,17 @@ test("Creator navigation, contact links and readable creation mark work on deskt
     await expect(page.locator(".creator-bio")).toContainText(
       "Hey, I'm Saad — a developer",
     );
+    await expect(page.locator(".creator-monogram img")).toHaveAttribute(
+      "src",
+      "/saad-profile.jpg",
+    );
+    expect(
+      await page
+        .locator(".creator-monogram img")
+        .evaluate(
+          (img: HTMLImageElement) => img.complete && img.naturalWidth > 0,
+        ),
+    ).toBe(true);
     await expect(
       page.getByRole("link", { name: "Saad on Instagram" }),
     ).toHaveAttribute("href", "https://www.instagram.com/saad._.4228/");
@@ -60,6 +69,10 @@ test("Creator navigation, contact links and readable creation mark work on deskt
     });
     await page.getByRole("button", { name: "Switch to dark mode" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-mode", "dark");
+    await expect(page.locator(".creator-socials>a").first()).toHaveCSS(
+      "background-color",
+      "rgb(42, 65, 88)",
+    );
     await page.screenshot({
       path: `outputs/creator-${width}-dark.png`,
       fullPage: true,

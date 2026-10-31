@@ -61,7 +61,9 @@ test("Homepage, onboarding, live conversation and appearance", async ({
   await expect(
     page.getByText("Hello from the first browser!", { exact: true }),
   ).toBeVisible();
-  await page.locator("input[type=file]").setInputFiles("public/stadium.jpg");
+  await page
+    .getByLabel("Upload a chat attachment")
+    .setInputFiles("public/stadium.jpg");
   await expect(page.getByText("Ready to send", { exact: true })).toBeVisible();
   await page
     .getByRole("textbox", { name: "Your message" })

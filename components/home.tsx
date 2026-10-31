@@ -30,6 +30,7 @@ import {
 import { Brand, Avatar, Footer } from "./brand";
 import { useState } from "react";
 import { Modal } from "./modal";
+import { creator } from "../lib/creator";
 export function DemoChat({
   theme = "alpine",
   onOpen,
@@ -427,7 +428,9 @@ export default function Home({
           href="/about"
           aria-label="About Mohammad Saad, creator of DropBy"
         >
-          <span className="creator-avatar">MS</span>
+          <span className="creator-avatar">
+            <img src={creator.image} alt="Saad’s profile illustration" />
+          </span>
           <div>
             <span className="section-label">A LITTLE ABOUT THE CREATOR</span>
             <h3>Mohammad Saad — the creator of DropBy.</h3>

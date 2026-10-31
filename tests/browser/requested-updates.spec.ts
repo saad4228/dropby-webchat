@@ -12,12 +12,10 @@ test("Homepage is higher, compact, and scenic below the fold in both appearances
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   expect((await page.locator(".demo-chat").boundingBox())!.y).toBeLessThan(160);
   expect((await page.locator("h1").boundingBox())!.y).toBeLessThan(300);
-  const scenery = await page
-    .locator(".home-scenery")
-    .evaluate((el) => ({
-      position: getComputedStyle(el).position,
-      height: el.getBoundingClientRect().height,
-    }));
+  const scenery = await page.locator(".home-scenery").evaluate((el) => ({
+    position: getComputedStyle(el).position,
+    height: el.getBoundingClientRect().height,
+  }));
   expect(scenery.position).toBe("fixed");
   expect(scenery.height).toBe(1000);
   await page.screenshot({
@@ -45,13 +43,11 @@ test("A large room logo and photo upload persist, and the expanded emoji picker 
   const slug = "updates-" + Date.now();
   await page.getByPlaceholder("weekend-plans").fill(slug);
   await page.getByRole("button", { name: "Room logo 🌿", exact: true }).click();
-  await page
-    .getByLabel("Upload room logo")
-    .setInputFiles({
-      name: "room-cover.jpg",
-      mimeType: "image/jpeg",
-      buffer: largePhoto(3 * 1024 * 1024),
-    });
+  await page.getByLabel("Upload room logo").setInputFiles({
+    name: "room-cover.jpg",
+    mimeType: "image/jpeg",
+    buffer: largePhoto(3 * 1024 * 1024),
+  });
   await expect(page.getByAltText("Selected room logo")).toBeVisible();
   await page.getByRole("button", { name: "Make it yours" }).click();
   await page.getByPlaceholder("What should we call you?").fill("Image Owner");
@@ -68,13 +64,11 @@ test("A large room logo and photo upload persist, and the expanded emoji picker 
     .getByRole("button", { name: "Skip the details. Quick Join." })
     .click();
   await expect(friend.locator(".room-home img")).toBeVisible();
-  await page
-    .locator("input[type=file]")
-    .setInputFiles({
-      name: "large-photo.jpg",
-      mimeType: "image/jpeg",
-      buffer: largePhoto(5 * 1024 * 1024),
-    });
+  await page.getByLabel("Upload a chat attachment").setInputFiles({
+    name: "large-photo.jpg",
+    mimeType: "image/jpeg",
+    buffer: largePhoto(5 * 1024 * 1024),
+  });
   await expect(page.getByText("Ready to send", { exact: true })).toBeVisible({
     timeout: 20000,
   });
@@ -116,13 +110,11 @@ test("Wallpapers larger than 2 MB persist after reload without localStorage over
   await page.getByRole("button", { name: "Say something nice..." }).click();
   await page.getByRole("button", { name: "Change room appearance" }).click();
   await page.locator(".custom-theme summary").click();
-  await page
-    .getByLabel("Upload wallpaper (up to 7 MB)")
-    .setInputFiles({
-      name: "wallpaper.jpg",
-      mimeType: "image/jpeg",
-      buffer: largePhoto(6 * 1024 * 1024),
-    });
+  await page.getByLabel("Upload wallpaper (up to 7 MB)").setInputFiles({
+    name: "wallpaper.jpg",
+    mimeType: "image/jpeg",
+    buffer: largePhoto(6 * 1024 * 1024),
+  });
   await expect(page.locator(".chat-app")).toHaveAttribute("style", /blob:/);
   await expect
     .poll(() =>
@@ -158,12 +150,10 @@ test("Wallpapers larger than 2 MB persist after reload without localStorage over
   await expect(page.locator(".chat-app")).toHaveAttribute("style", /blob:/);
   await page.getByRole("button", { name: "Change room appearance" }).click();
   await page.locator(".custom-theme summary").click();
-  await page
-    .getByLabel("Upload wallpaper (up to 7 MB)")
-    .setInputFiles({
-      name: "too-large.jpg",
-      mimeType: "image/jpeg",
-      buffer: largePhoto(8 * 1024 * 1024),
-    });
+  await page.getByLabel("Upload wallpaper (up to 7 MB)").setInputFiles({
+    name: "too-large.jpg",
+    mimeType: "image/jpeg",
+    buffer: largePhoto(8 * 1024 * 1024),
+  });
   await expect(page.getByRole("status")).toContainText("7 MB");
 });

@@ -12,6 +12,7 @@ npm run build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_green_gargoyle.sql
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_lively_black_tarantula.sql
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_yellow_arclight.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0003_aspiring_dagger.sql
 npm run dev -- --port 5173
 ```
 
@@ -32,6 +33,8 @@ Open the printed local URL. Run the initial migration once per local database. L
 - Ten themes, persistent personal overrides, shared owner-controlled presets, custom message/accent colors with contrasting text, uploaded local wallpapers, opacity/blur controls, light/dark mode, and reduced motion. Love letters, Football night, Cosmic daydream and Retro arcade change backgrounds, bubble shapes, controls and ambient details.
 - Animated Unicode emojis in messages, enlarged emoji-only messages, replay on tap and bounded reaction bursts. All 647 picker emojis have a motion; joined characters, skin tones and flags stay intact. System reduced motion and the persistent Room motion switch disable effects.
 - A dedicated `/about` creator page using Mohammad Saad’s supplied biography, Instagram and LinkedIn links, plus the contact email. The homepage navigation provides both Join and Create actions.
+- A consistent slate and blue palette on the homepage and creator page, with the supplied profile illustration in both places.
+- Room radio: a compact shared music player with a persistent 20-song queue, MP3/M4A/OGG/MP4/WebM uploads up to 15 MiB, per-song acceptance or rejection, personal volume/mute, change requests, and DJ/moderator playback controls. Videos use an audio element; no video is shown or transcoded to MP3.
 - Wallpapers up to 7 MiB persist in IndexedDB; short browser object URLs display large images without CSS custom-property limits or localStorage quota failures. The categorized emoji picker includes 647 emojis for messages and reactions.
 - Server-enforced mute/unmute, bans, moderator assignments, message reports and owner/moderator report review.
 - Contextual floating panels, keyboard composer, focus-trapped dialogs, semantic controls, meaningful empty/error/loading states.
@@ -81,13 +84,15 @@ With the local server running:
 
 ```powershell
 npx tsc --noEmit
-node tests/api.mjs
+npm run test:api
 npm run test:unit
 npx playwright test
 npm run build
 ```
 
-The API suite uses independent cookie jars and covers 32 room, shared theme, logo authorization, privacy, messaging, idempotency, permission, reaction, media range, moderation, signaling, CSRF, session and optional account scenarios. Twelve unit tests verify SFU tokens/capacities, upload error handling, image limits, signature checks and emoji graphemes. Thirteen browser journeys cover onboarding, two-user conversations, actual peer calls with synthetic media, mobile/dark layouts, large image and logo uploads, wallpaper persistence, repeated emoji/reaction selections, navigation joining, native autofill appearance, text/button contrast, room details, creator/contact navigation, expressive theme persistence, emoji animations and reduced motion. Screenshots are stored in ignored `outputs/`.
+The API suites use independent cookie jars and cover 40 room, music permissions and concurrency, shared theme, logo authorization, privacy, messaging, idempotency, permission, reaction, media range, moderation, signaling, CSRF, session and optional account scenarios. Fourteen unit tests verify SFU tokens/capacities, upload error handling, image limits, signature checks, emoji graphemes and music timeline calculations. Fourteen browser journeys cover onboarding, two-user conversations, actual peer calls with synthetic media, mobile/dark layouts, large image and logo uploads, wallpaper persistence, repeated emoji/reaction selections, navigation joining, native autofill appearance, text/button contrast, room details, creator/contact navigation, expressive theme persistence, emoji animations, reduced motion and actual MP3/video-audio synchronization between two isolated browsers. Screenshots are stored in ignored `outputs/`.
+
+Room radio polls a server-authoritative playhead every two seconds and corrects local drift. The DJ or room owner/moderator can pause, seek, skip or end a session; anyone can add a song or ask for a change. If the DJ leaves, another member can take the seat. A new song requires each listener to opt in. Consent is saved per identity and current song; volume/mute stay on the device. Browsers may require an Enable sound click after a reload. Local tests verify playback within one second between two browsers; this is not sample-accurate synchronization. Container codec support and network buffering depend on the browser. The tests use generated sine tones and a synthetic video in `tests/fixtures`, not commercial music. Played tracks remain stored until an operational retention/cleanup policy is added; queued tracks can be removed by their uploader or a room moderator.
 
 The default Playwright configuration uses installed Windows Chrome; set `PLAYWRIGHT_CHROME_PATH` to another Chrome/Chromium executable on a different host. Tests use synthetic microphone/camera devices. They do not prove real hardware quality, Safari/Firefox compatibility or connectivity across all NAT/firewall combinations. Browser permissions and device/network behavior require manual cross-browser testing.
 
@@ -101,4 +106,4 @@ The Sites deployment starts owner-private. That hosting access gate is separate 
 
 ## Assets
 
-Alpine lake and stadium photos are locally stored Unsplash assets. Font files are DM Sans and Manrope, served locally under their included SIL Open Font Licenses in `public/fonts/`. Avatars use platform emoji; no external avatar service is required.
+Alpine lake and stadium photos are locally stored Unsplash assets. The creator profile illustration was supplied by Mohammad Saad and is stored in `public/saad-profile.jpg`. Font files are DM Sans and Manrope, served locally under their included SIL Open Font Licenses in `public/fonts/`. Chat avatars use platform emoji; no external avatar service is required.

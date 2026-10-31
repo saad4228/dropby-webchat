@@ -6,6 +6,8 @@ import "./polish.css";
 import "./readability.css";
 import "./expressive.css";
 import "./creator.css";
+import "./harmony.css";
+import "./music.css";
 
 export const metadata: Metadata = {
   title: "DropBy — Good conversations. Just a link away.",

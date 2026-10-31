@@ -2,6 +2,7 @@ import {
   sqliteTable,
   text,
   integer,
+  real,
   primaryKey,
   index,
 } from "drizzle-orm/sqlite-core";
@@ -106,3 +107,37 @@ export const rateLimits = sqliteTable("rate_limits", {
   count: integer().notNull(),
   expires: integer().notNull(),
 });
+export const musicStates = sqliteTable("music_states", {
+  roomId: text().primaryKey(),
+  trackId: text(),
+  controllerId: text(),
+  position: real().notNull().default(0),
+  playing: integer().notNull().default(0),
+  updatedAt: integer().notNull(),
+  revision: integer().notNull().default(0),
+});
+export const musicTracks = sqliteTable(
+  "music_tracks",
+  {
+    id: text().primaryKey(),
+    roomId: text().notNull(),
+    attachmentId: text().notNull().unique(),
+    title: text().notNull(),
+    duration: real().notNull(),
+    addedBy: text().notNull(),
+    created: integer().notNull(),
+    played: integer().notNull().default(0),
+  },
+  (t) => [index("music_queue").on(t.roomId, t.played, t.created)],
+);
+export const musicChoices = sqliteTable(
+  "music_choices",
+  {
+    roomId: text().notNull(),
+    sessionId: text().notNull(),
+    trackId: text().notNull(),
+    response: text().notNull(),
+    changeRequested: integer().notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.roomId, t.sessionId] })],
+);

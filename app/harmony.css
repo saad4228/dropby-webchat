@@ -1,0 +1,120 @@
+/* One neutral palette lets the scenery and blue brand accents breathe. */
+.homepage,
+.creator-page {
+  --ink: #202d3b;
+  --home-secondary: #3f5265;
+  --home-muted: #526478;
+  --home-soft-heading: #456177;
+  --home-link: #315b9e;
+  --floating-bg: rgba(248, 251, 253, 0.96);
+}
+.creator-page {
+  --input-fill: #edf3f8;
+  --input-ink: #273b4b;
+}
+[data-mode="dark"] .creator-page {
+  --input-fill: #2a4158;
+  --input-ink: #e0e9f5;
+}
+[data-mode="dark"] .homepage,
+[data-mode="dark"] .creator-page {
+  --ink: #f0f5fb;
+  --home-secondary: #e0e9f5;
+  --home-muted: #c8d6e6;
+  --home-soft-heading: #c1d7eb;
+  --home-link: #b8d1ff;
+  --floating-bg: rgba(27, 43, 61, 0.97);
+}
+.homepage .home-scenery,
+.creator-scenery {
+  background:
+    linear-gradient(115deg, #f2f7fbe6 0%, #edf4f9b8 50%, #eef4f8d9 100%),
+    url("/alpine.jpg") center 44% / cover no-repeat;
+}
+[data-mode="dark"] .homepage .home-scenery,
+[data-mode="dark"] .creator-scenery {
+  background:
+    linear-gradient(115deg, #122336e8 0%, #20364bc4 50%, #172b3fdf 100%),
+    url("/alpine.jpg") center 44% / cover no-repeat;
+}
+.homepage:after {
+  background: linear-gradient(180deg, transparent, #d8e5ef24);
+}
+[data-mode="dark"] .homepage:after {
+  background: linear-gradient(180deg, transparent, #16344a24);
+}
+.homepage .hero-description,
+.homepage .make-yours p,
+.homepage .feature-strip p,
+.homepage .steps p,
+.homepage .creator-section p {
+  text-shadow: none;
+}
+.homepage .feature-strip {
+  background: #f4f8fc36;
+  border-color: #94a9bd36;
+}
+.homepage .creator-section {
+  background: #f7fafbdc;
+  border-color: #b9cbd34d;
+}
+[data-mode="dark"] .homepage .creator-section {
+  background: #1b3046df;
+  border-color: #91afc62b;
+}
+[data-mode="dark"] .homepage .join-form,
+[data-mode="dark"] .homepage .demo-chat,
+[data-mode="dark"] .homepage .floating-note,
+[data-mode="dark"] .homepage .note-bottom > div {
+  border-color: #a4bbd32b;
+}
+.homepage .creator-avatar {
+  width: 62px;
+  height: 62px;
+  background: transparent;
+  border: 2px solid #f8fbff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px #193c5d15;
+  overflow: hidden;
+}
+.creator-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 34%;
+}
+.creator-monogram {
+  width: 124px;
+  height: 124px;
+  background: transparent;
+  border: 3px solid #f4f8fd;
+  box-shadow: 0 8px 24px #24395312;
+}
+.creator-monogram > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 34%;
+  border-radius: 26px;
+}
+[data-mode="dark"] .creator-monogram {
+  background: transparent;
+  border-color: #678096;
+}
+.creator-profile-card {
+  transform: rotate(1deg);
+  border-color: #acbdcd40;
+}
+.creator-project-note {
+  background: var(--floating-bg);
+}
+@media (max-width: 600px) {
+  .homepage .creator-avatar {
+    width: 48px;
+    height: 48px;
+  }
+  .creator-monogram {
+    width: 112px;
+    height: 112px;
+  }
+}

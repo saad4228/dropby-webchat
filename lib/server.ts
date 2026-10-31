@@ -14,6 +14,7 @@ import {
 } from "./upload-limits";
 import { allEmojis } from "./emojis";
 import { callConfig } from "./call-token";
+import { musicCommand, musicSnapshot } from "./music-server";
 
 type Row = Record<string, any>;
 const db = () => {
@@ -267,7 +268,8 @@ export async function handle(req: Request) {
       await access(r!.slug, user);
       if (
         !(await first(
-          "SELECT id FROM messages WHERE attachmentId=? AND deleted=0",
+          "SELECT id FROM messages WHERE attachmentId=? AND deleted=0 UNION ALL SELECT id FROM music_tracks WHERE attachmentId=? LIMIT 1",
+          a!.id,
           a!.id,
         ))
       )
@@ -360,6 +362,22 @@ export async function handle(req: Request) {
       return json({ room: safeRoom(r!) });
     }
     const { room, member } = await access(slug, user);
+    if (action === "music" && parts.length === 3) {
+      if (method === "GET") {
+        await run(
+          "UPDATE memberships SET lastSeen=? WHERE roomId=? AND sessionId=? AND EXISTS(SELECT 1 FROM music_choices c JOIN music_states s ON s.roomId=c.roomId AND s.trackId=c.trackId WHERE c.roomId=? AND c.sessionId=? AND c.response='accepted' AND s.playing=1)",
+          Date.now(),
+          room.id,
+          user.id,
+          room.id,
+          user.id,
+        );
+        return json(await musicSnapshot(room.id, user.id));
+      }
+      if (method !== "POST") fail("Method not allowed.", 405);
+      await rate("music:" + user.id, 90);
+      return json(await musicCommand(req, room, user, member));
+    }
     if (action === "logo") {
       if (method === "GET") {
         if (!room.logoImageId) fail("Room image unavailable.", 404);
@@ -633,6 +651,16 @@ export async function handle(req: Request) {
         ))
       )
         fail("Attachment unavailable.");
+      if (
+        b.attachmentId &&
+        (await first(
+          "SELECT id FROM music_tracks WHERE attachmentId=?",
+          b.attachmentId,
+        ))
+      )
+        fail(
+          "Music files belong to the listening player. Upload a separate copy for chat.",
+        );
       await run(
         "INSERT INTO messages (id,roomId,senderId,text,replyId,attachmentId,created) VALUES (?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING",
         b.id,

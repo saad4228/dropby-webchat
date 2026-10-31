@@ -52,6 +52,7 @@ import { Modal } from "./modal";
 import { getTheme } from "../lib/themes";
 import { EmojiEffects } from "./animated-emoji";
 import { ThemeScene } from "./theme-scene";
+import RoomMusic from "./room-music";
 const time = Date.now() - 8 * 60000;
 export function demoSnapshot(user: Identity): Snapshot {
   return {
@@ -775,6 +776,16 @@ export default function Chat({
           </button>
         </div>
       </header>
+      <RoomMusic
+        slug={slug}
+        userId={user.id}
+        role={data?.role || "member"}
+        restricted={
+          restricted || !!data?.members.find((m) => m.id === user.id)?.muted
+        }
+        demo={demo}
+        onCreate={onCreate}
+      />
       {demo && (
         <div className="demo-banner">
           <span>
@@ -1185,6 +1196,7 @@ export default function Chat({
       <input
         ref={fileInput}
         type="file"
+        aria-label="Upload a chat attachment"
         hidden
         accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,audio/*,application/pdf,text/plain"
         onChange={(e) => {
