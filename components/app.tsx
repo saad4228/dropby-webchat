@@ -7,20 +7,18 @@ import { Modal } from "./modal";
 import { api, Identity, colors } from "../lib/client";
 import { ArrowRight, Heart, ShieldCheck } from "lucide-react";
 import { creator } from "../lib/creator";
+import { useDarkMode } from "../hooks/use-dark-mode";
 export default function App() {
+  const [dark, setDark] = useDarkMode();
   const [user, setUser] = useState<Identity | null>(null),
     [room, setRoom] = useState(""),
     [demo, setDemo] = useState(false),
-    [dark, setDark] = useState(false),
     [onboard, setOnboard] = useState<{ slug: string; create: boolean } | null>(
       null,
     ),
     [info, setInfo] = useState("");
   useEffect(() => {
     document.documentElement.dataset.ready = "true";
-    try {
-      setDark(localStorage.getItem("dropby-dark") === "true");
-    } catch {}
     api("session")
       .then(async ({ user }) => {
         setUser(user);
@@ -46,12 +44,6 @@ export default function App() {
     window.addEventListener("popstate", pop);
     return () => window.removeEventListener("popstate", pop);
   }, []);
-  useEffect(() => {
-    document.documentElement.dataset.mode = dark ? "dark" : "light";
-    try {
-      localStorage.setItem("dropby-dark", String(dark));
-    } catch {}
-  }, [dark]);
   function joined(slug: string, identity: Identity) {
     setUser(identity);
     setDemo(false);

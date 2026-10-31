@@ -34,7 +34,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          id="dropby-color-mode"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var dark=false;try{dark=localStorage.getItem("dropby-dark")==="true"}catch(e){}var root=document.documentElement;root.dataset.mode=dark?"dark":"light";root.style.colorScheme=dark?"dark":"light"})()`,
+          }}
+        />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );

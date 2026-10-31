@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useDarkMode } from "../hooks/use-dark-mode";
 import {
   ArrowLeft,
   ArrowRight,
@@ -16,19 +17,10 @@ import {
 import { Brand } from "./brand";
 import { creator } from "../lib/creator";
 export default function CreatorPage() {
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useDarkMode();
   useEffect(() => {
     document.documentElement.dataset.ready = "true";
-    try {
-      setDark(localStorage.getItem("dropby-dark") === "true");
-    } catch {}
   }, []);
-  useEffect(() => {
-    document.documentElement.dataset.mode = dark ? "dark" : "light";
-    try {
-      localStorage.setItem("dropby-dark", String(dark));
-    } catch {}
-  }, [dark]);
   return (
     <div className="creator-page">
       <div className="creator-scenery" />
