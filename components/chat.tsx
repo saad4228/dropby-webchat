@@ -23,6 +23,7 @@ import {
   Smile,
   Square,
   Sun,
+  Palette,
   Moon,
   Trash2,
   Users,
@@ -53,6 +54,7 @@ import { getTheme } from "../lib/themes";
 import { EmojiMotionControl } from "./animated-emoji";
 import { ThemeScene } from "./theme-scene";
 import RoomMusic from "./room-music";
+import { RoomRail } from "./room-rail";
 const time = Date.now() - 8 * 60000;
 export function demoSnapshot(user: Identity): Snapshot {
   return {
@@ -696,503 +698,553 @@ export default function Chat({
       <div className="chat-scenery" />
       <ThemeScene theme={theme} />
       <EmojiMotionControl enabled={appearance.animations} />
-      <header className="room-header">
-        <button className="room-home" aria-label="Back to home" onClick={leave}>
-          {data ? (
-            <RoomMark room={data.room} />
-          ) : (
-            <MessageCircle fill="currentColor" size={27} strokeWidth={0} />
-          )}
-        </button>
-        <button className="room-title" onClick={() => togglePanel("settings")}>
-          <strong>
-            {slug}
-            <ChevronDown size={15} />
-          </strong>
-          <span>
-            {demo ? (
-              <>
-                <i className="demo-status" /> Interactive demo
-              </>
+      <RoomRail
+        panel={panel}
+        user={user}
+        onHome={leave}
+        onNavigate={(next) => {
+          setPanel(next);
+          if (!next) bottom.current?.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
+      <div className="room-workspace">
+        <header className="room-header">
+          <button
+            className="room-home"
+            aria-label="Back to home"
+            onClick={leave}
+          >
+            {data ? (
+              <RoomMark room={data.room} />
+            ) : (
+              <MessageCircle fill="currentColor" size={27} strokeWidth={0} />
+            )}
+          </button>
+          <div className="header-presence" aria-hidden="true">
+            {data?.members
+              .filter((m) => m.online)
+              .slice(0, 3)
+              .map((m) => (
+                <Avatar
+                  key={m.id}
+                  name={m.name}
+                  avatar={m.avatar}
+                  color={m.color}
+                  small
+                />
+              ))}
+          </div>
+          <button
+            className="room-title"
+            onClick={() => togglePanel("settings")}
+          >
+            <strong>
+              {slug}
+              <ChevronDown size={15} />
+            </strong>
+            <span>
+              {demo ? (
+                <>
+                  <i className="demo-status" /> Interactive demo
+                </>
+              ) : (
+                <>
+                  <i className={offline ? "offline-dot" : "live-dot"} />
+                  {offline
+                    ? "Reconnecting…"
+                    : `${data?.members.filter((m) => m.online).length || 1} here with you`}
+                </>
+              )}
+            </span>
+          </button>
+          <div className="header-room-tag">
+            <span aria-hidden="true">{themeInfo.icon}</span>
+            {themeInfo.name}
+          </div>
+          <div className="room-header-actions">
+            <button
+              className="icon-button room-call-action"
+              onClick={() => beginCall(false)}
+              aria-label="Start audio call"
+            >
+              <Phone size={20} />
+              <span>Call</span>
+            </button>
+            <button
+              className="icon-button"
+              onClick={() => beginCall(true)}
+              aria-label="Start video call"
+            >
+              <Video size={21} />
+            </button>
+            <span className="header-divider" />
+            <button
+              className={
+                "icon-button " + (panel === "members" ? "selected" : "")
+              }
+              onClick={() => togglePanel("members")}
+              aria-label="Show room members"
+            >
+              <Users size={21} />
+            </button>
+            <button
+              className={
+                "icon-button " + (panel === "appearance" ? "selected" : "")
+              }
+              onClick={() => togglePanel("appearance")}
+              aria-label="Change room appearance"
+            >
+              <Palette size={21} />
+            </button>
+            <button
+              className="icon-button share-header room-invite-action"
+              onClick={() => togglePanel("share")}
+              aria-label="Invite your people"
+            >
+              <Link size={20} />
+              <span>Invite</span>
+            </button>
+            <button
+              className={"icon-button " + (panel === "more" ? "selected" : "")}
+              onClick={() => togglePanel("more")}
+              aria-label="More room options"
+            >
+              <MoreHorizontal size={22} />
+            </button>
+          </div>
+        </header>
+        {demo && (
+          <div className="demo-banner">
+            <span>Preview room · Try a message or a reaction.</span>
+            <button onClick={onCreate}>
+              Make a real room <ArrowUpRightIcon />
+            </button>
+          </div>
+        )}
+        <main className="conversation-shell">
+          <div className="conversation-toolbar">
+            <span className="conversation-heading">
+              <MessageCircle size={15} />
+              Conversation
+            </span>
+            <RoomMusic
+              slug={slug}
+              userId={user.id}
+              role={data?.role || "member"}
+              restricted={
+                restricted ||
+                !!data?.members.find((m) => m.id === user.id)?.muted
+              }
+              demo={demo}
+              onCreate={onCreate}
+            />
+          </div>
+          <div
+            className={
+              "conversation-scroll " +
+              (allMessages.length ? "has-conversation" : "new-conversation")
+            }
+            ref={scroller}
+            onScroll={() => {
+              const el = scroller.current;
+              if (el)
+                nearBottom.current =
+                  el.scrollHeight - el.scrollTop - el.clientHeight < 140;
+            }}
+          >
+            {!data ? (
+              <div className="room-loading">
+                {restricted ? (
+                  <Lock size={27} />
+                ) : (
+                  <LoaderCircle className="spin" size={27} />
+                )}
+                <h3>
+                  {restricted
+                    ? "Your access to this room has ended."
+                    : offline
+                      ? "Let’s reconnect."
+                      : "Finding your people…"}
+                </h3>
+                <p>
+                  {restricted
+                    ? "You can return home and join another conversation."
+                    : offline
+                      ? "Check your connection, then try again."
+                      : "Make yourself comfortable."}
+                </p>
+                {restricted ? (
+                  <button className="primary" onClick={onLeave}>
+                    Back to home
+                  </button>
+                ) : (
+                  offline && (
+                    <button className="primary" onClick={refresh}>
+                      Try again
+                    </button>
+                  )
+                )}
+              </div>
             ) : (
               <>
-                <i className={offline ? "offline-dot" : "live-dot"} />
-                {offline
-                  ? "Reconnecting…"
-                  : `${data?.members.filter((m) => m.online).length || 1} here with you`}
+                <div className="room-welcome">
+                  <span className="room-welcome-icon">
+                    <RoomMark room={data.room} />
+                  </span>
+                  <span className="section-label">
+                    {demo ? "MATCH NIGHT. GOOD COMPANY." : themeInfo.eyebrow}
+                  </span>
+                  <h2>
+                    {demo
+                      ? "The match is better together."
+                      : `Welcome to ${slug}.`}
+                  </h2>
+                  <p>
+                    {data.room.description ||
+                      "No big agenda. Just a good place to be together."}
+                  </p>
+                  <button onClick={() => setPanel("share")}>
+                    <Link size={13} /> Invite your people{" "}
+                    <ArrowRight size={13} />
+                  </button>
+                </div>
+                <div className="chat-date">
+                  <span>
+                    {new Date().toLocaleDateString([], {
+                      weekday: "long",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                  <Lock size={10} /> A shared space. Keep it kind.
+                </div>
+                {data.hasMore && (
+                  <button
+                    className="load-earlier"
+                    onClick={loadOlder}
+                    disabled={olderBusy}
+                  >
+                    {olderBusy ? "Loading…" : "A little further back"}
+                  </button>
+                )}
+                {!allMessages.length && (
+                  <div className="empty-room">
+                    <div>
+                      <MessageCircle size={25} />
+                      <span>👋</span>
+                    </div>
+                    <h3>A good conversation starts with hello.</h3>
+                    <p>
+                      It’s a little quiet here. Be the first to say something.
+                    </p>
+                    <div className="hello-suggestions">
+                      {[
+                        "Hey everyone! 👋",
+                        "What’s the plan?",
+                        "Glad you’re here. ✨",
+                      ].map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => {
+                            setText(t);
+                            input.current?.focus();
+                          }}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="message-list">
+                  {allMessages.map((m, i) => (
+                    <Message
+                      key={m.id}
+                      message={m}
+                      user={user}
+                      snapshot={fullData!}
+                      grouped={
+                        i > 0 &&
+                        allMessages[i - 1].senderId === m.senderId &&
+                        m.created - allMessages[i - 1].created < 180000
+                      }
+                      onAction={action}
+                      onView={setViewer}
+                    />
+                  ))}
+                </div>
+                <div className="typing-indicator">
+                  {data.members
+                    .filter(
+                      (m) => m.id !== user.id && m.typingUntil > Date.now(),
+                    )
+                    .map((m) => m.name)
+                    .join(", ")}
+                  {data.members.some(
+                    (m) => m.id !== user.id && m.typingUntil > Date.now(),
+                  ) && (
+                    <span>
+                      {" "}
+                      is typing <i />
+                      <i />
+                      <i />
+                    </span>
+                  )}
+                </div>
+                <div ref={bottom} />
               </>
             )}
-          </span>
-        </button>
-        <div className="header-room-tag">
-          <span aria-hidden="true">{themeInfo.icon}</span>
-          {themeInfo.name}
-        </div>
-        <div className="room-header-actions">
-          <button
-            className="icon-button"
-            onClick={() => beginCall(false)}
-            aria-label="Start audio call"
-          >
-            <Phone size={20} />
-          </button>
-          <button
-            className="icon-button"
-            onClick={() => beginCall(true)}
-            aria-label="Start video call"
-          >
-            <Video size={21} />
-          </button>
-          <span className="header-divider" />
-          <button
-            className={"icon-button " + (panel === "members" ? "selected" : "")}
-            onClick={() => togglePanel("members")}
-            aria-label="Show room members"
-          >
-            <Users size={21} />
-          </button>
-          <button
-            className={
-              "icon-button " + (panel === "appearance" ? "selected" : "")
-            }
-            onClick={() => togglePanel("appearance")}
-            aria-label="Change room appearance"
-          >
-            <Sun size={21} />
-          </button>
-          <button
-            className="icon-button share-header"
-            onClick={() => togglePanel("share")}
-            aria-label="Invite your people"
-          >
-            <Link size={20} />
-          </button>
-          <button
-            className={"icon-button " + (panel === "more" ? "selected" : "")}
-            onClick={() => togglePanel("more")}
-            aria-label="More room options"
-          >
-            <MoreHorizontal size={22} />
-          </button>
-        </div>
-      </header>
-      <RoomMusic
-        slug={slug}
-        userId={user.id}
-        role={data?.role || "member"}
-        restricted={
-          restricted || !!data?.members.find((m) => m.id === user.id)?.muted
-        }
-        demo={demo}
-        onCreate={onCreate}
-      />
-      {demo && (
-        <div className="demo-banner">
-          <span>
-            Just exploring? You’re in a demo room. Say hello and try a reaction.
-          </span>
-          <button onClick={onCreate}>
-            Make a real room <ArrowUpRightIcon />
-          </button>
-        </div>
-      )}
-      <main className="conversation-shell">
-        <div
-          className="conversation-scroll"
-          ref={scroller}
-          onScroll={() => {
-            const el = scroller.current;
-            if (el)
-              nearBottom.current =
-                el.scrollHeight - el.scrollTop - el.clientHeight < 140;
-          }}
-        >
-          {!data ? (
-            <div className="room-loading">
-              {restricted ? (
-                <Lock size={27} />
-              ) : (
-                <LoaderCircle className="spin" size={27} />
-              )}
-              <h3>
-                {restricted
-                  ? "Your access to this room has ended."
-                  : offline
-                    ? "Let’s reconnect."
-                    : "Finding your people…"}
-              </h3>
-              <p>
-                {restricted
-                  ? "You can return home and join another conversation."
-                  : offline
-                    ? "Check your connection, then try again."
-                    : "Make yourself comfortable."}
-              </p>
-              {restricted ? (
-                <button className="primary" onClick={onLeave}>
-                  Back to home
-                </button>
-              ) : (
-                offline && (
-                  <button className="primary" onClick={refresh}>
-                    Try again
+          </div>
+          <div className="composer-area">
+            {data?.members.some((m) => m.inCall && m.online) &&
+              !call.active && (
+                <div className="incoming-call">
+                  <span className="call-pulse" />
+                  <span>Your people are in a call.</span>
+                  <button onClick={() => beginCall(false)}>
+                    Join them <ArrowRight size={14} />
                   </button>
-                )
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="room-welcome">
-                <span className="room-welcome-icon">
-                  <RoomMark room={data.room} />
-                </span>
-                <span className="section-label">
-                  {demo ? "MATCH NIGHT. GOOD COMPANY." : themeInfo.eyebrow}
-                </span>
-                <h2>
-                  {demo
-                    ? "The match is better together."
-                    : `Welcome to ${slug}.`}
-                </h2>
-                <p>
-                  {data.room.description ||
-                    "No big agenda. Just a good place to be together."}
-                </p>
-                <button onClick={() => setPanel("share")}>
-                  <Link size={13} /> Invite your people <ArrowRight size={13} />
-                </button>
-              </div>
-              <div className="chat-date">
-                <span>
-                  {new Date().toLocaleDateString([], {
-                    weekday: "long",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-                <Lock size={10} /> A shared space. Keep it kind.
-              </div>
-              {data.hasMore && (
-                <button
-                  className="load-earlier"
-                  onClick={loadOlder}
-                  disabled={olderBusy}
-                >
-                  {olderBusy ? "Loading…" : "A little further back"}
-                </button>
-              )}
-              {!allMessages.length && (
-                <div className="empty-room">
-                  <div>
-                    <MessageCircle size={25} />
-                    <span>👋</span>
-                  </div>
-                  <h3>A good conversation starts with hello.</h3>
-                  <p>
-                    It’s a little quiet here. Be the first to say something.
-                  </p>
-                  <div className="hello-suggestions">
-                    {[
-                      "Hey everyone! 👋",
-                      "What’s the plan?",
-                      "Glad you’re here. ✨",
-                    ].map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => {
-                          setText(t);
-                          input.current?.focus();
-                        }}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               )}
-              <div className="message-list">
-                {allMessages.map((m, i) => (
-                  <Message
-                    key={m.id}
-                    message={m}
-                    user={user}
-                    snapshot={fullData!}
-                    grouped={
-                      i > 0 &&
-                      allMessages[i - 1].senderId === m.senderId &&
-                      m.created - allMessages[i - 1].created < 180000
-                    }
-                    onAction={action}
-                    onView={setViewer}
-                  />
-                ))}
-              </div>
-              <div className="typing-indicator">
-                {data.members
-                  .filter((m) => m.id !== user.id && m.typingUntil > Date.now())
-                  .map((m) => m.name)
-                  .join(", ")}
-                {data.members.some(
-                  (m) => m.id !== user.id && m.typingUntil > Date.now(),
-                ) && (
-                  <span>
-                    {" "}
-                    is typing <i />
-                    <i />
-                    <i />
-                  </span>
-                )}
-              </div>
-              <div ref={bottom} />
-            </>
-          )}
-        </div>
-        <div className="composer-area">
-          {data?.members.some((m) => m.inCall && m.online) && !call.active && (
-            <div className="incoming-call">
-              <span className="call-pulse" />
-              <span>Your people are in a call.</span>
-              <button onClick={() => beginCall(false)}>
-                Join them <ArrowRight size={14} />
-              </button>
-            </div>
-          )}
-          {pending && !sending && (
-            <div className="pending-message">
-              <WifiOff size={15} />
-              <span>Your message hasn’t been saved yet.</span>
-              <button onClick={() => send(true)}>Try again</button>
-              <button
-                onClick={() => setPending(null)}
-                aria-label="Dismiss retry"
-              >
-                <X size={15} />
-              </button>
-            </div>
-          )}
-          {(reply || edit) && (
-            <div className="composer-context">
-              <span>
-                <strong>
-                  {edit ? "Editing your message" : "Replying to " + reply?.name}
-                </strong>
-                <small>
-                  {(edit || reply)?.text || (edit || reply)?.fileName}
-                </small>
-              </span>
-              <button
-                onClick={() => {
-                  setReply(null);
-                  setEdit(null);
-                  if (edit) setText("");
-                }}
-                aria-label="Cancel reply or edit"
-              >
-                <X size={17} />
-              </button>
-            </div>
-          )}
-          {(upload || uploadProgress >= 0) && (
-            <div className="composer-context">
-              <Image size={20} />
-              <span>
-                <strong>
-                  {uploadProgress >= 0
-                    ? "Uploading your moment… " + uploadProgress + "%"
-                    : upload?.name}
-                </strong>
-                <small>
-                  {uploadProgress >= 0
-                    ? "A little patience. Almost there."
-                    : "Ready to send"}
-                </small>
-              </span>
-              <button
-                onClick={() => {
-                  uploadRequest.current?.abort();
-                  setUpload(null);
-                }}
-                aria-label="Remove attachment"
-              >
-                <X size={17} />
-              </button>
-            </div>
-          )}
-          {recordPreview && (
-            <div className="record-preview">
-              <button
-                aria-label="Discard voice note"
-                onClick={() => setRecordPreview(null)}
-              >
-                <Trash2 size={18} />
-              </button>
-              <audio controls src={recordUrl} />
-              <button
-                className="text-link"
-                onClick={() => {
-                  const type = recordPreview.type.split(";")[0];
-                  uploadFile(
-                    new File(
-                      [recordPreview],
-                      "voice-note." +
-                        (type.includes("mp4")
-                          ? "m4a"
-                          : type.includes("ogg")
-                            ? "ogg"
-                            : "webm"),
-                      { type },
-                    ),
-                  );
-                  setRecordPreview(null);
-                }}
-              >
-                Attach note <ArrowRight size={15} />
-              </button>
-            </div>
-          )}
-          {recording ? (
-            <div className="recording-bar">
-              <button aria-label="Cancel recording" onClick={cancelRecording}>
-                <Trash2 size={19} />
-              </button>
-              <i className="record-dot" />
-              <strong>
-                {paused ? "Paused" : "Recording"}{" "}
-                {Math.floor(recordSeconds / 60)}:
-                {String(recordSeconds % 60).padStart(2, "0")}
-              </strong>
-              <span className="record-wave">
-                {Array.from({ length: 22 }, (_, i) => (
-                  <i
-                    key={i}
-                    style={{ height: 6 + Math.abs(Math.sin(i * 2)) * 22 }}
-                  />
-                ))}
-              </span>
-              <button
-                onClick={() => {
-                  if (paused) recorder.current?.resume();
-                  else recorder.current?.pause();
-                  setPaused(!paused);
-                }}
-                aria-label={paused ? "Resume recording" : "Pause recording"}
-              >
-                {paused ? <Play size={18} /> : <Pause size={18} />}
-              </button>
-              <button
-                className="stop-record"
-                onClick={() => recorder.current?.stop()}
-                aria-label="Stop and preview recording"
-              >
-                <Square size={17} fill="currentColor" />
-              </button>
-            </div>
-          ) : (
-            <div className="composer">
-              <button
-                className="attach-button"
-                aria-label="Attach a photo, video or file"
-                onClick={() => fileInput.current?.click()}
-              >
-                <Plus size={23} />
-              </button>
-              <div className="composer-input">
-                <textarea
-                  ref={input}
-                  rows={1}
-                  maxLength={6000}
-                  placeholder="A thought, a hello, a little something…"
-                  aria-label="Your message"
-                  value={text}
-                  onChange={(e) => {
-                    setText(e.target.value);
-                    e.target.style.height = "auto";
-                    e.target.style.height =
-                      Math.min(e.target.scrollHeight, 140) + "px";
-                    if (!demo && Date.now() - lastTyping.current > 2500) {
-                      lastTyping.current = Date.now();
-                      api("rooms/" + slug + "/typing", {}).catch(() => {});
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (
-                      e.key === "Enter" &&
-                      !e.shiftKey &&
-                      !e.nativeEvent.isComposing
-                    ) {
-                      e.preventDefault();
-                      send();
-                    }
-                  }}
-                  onPaste={(e) => {
-                    const f = e.clipboardData.files[0];
-                    if (f) {
-                      e.preventDefault();
-                      uploadFile(f);
-                    }
-                  }}
-                />
+            {pending && !sending && (
+              <div className="pending-message">
+                <WifiOff size={15} />
+                <span>Your message hasn’t been saved yet.</span>
+                <button onClick={() => send(true)}>Try again</button>
                 <button
-                  className={
-                    "icon-button emoji-toggle " + (emoji ? "selected" : "")
-                  }
-                  onClick={() => setEmoji(!emoji)}
-                  aria-label="Choose an emoji"
+                  onClick={() => setPending(null)}
+                  aria-label="Dismiss retry"
                 >
-                  <Smile size={21} />
+                  <X size={15} />
+                </button>
+              </div>
+            )}
+            {(reply || edit) && (
+              <div className="composer-context">
+                <span>
+                  <strong>
+                    {edit
+                      ? "Editing your message"
+                      : "Replying to " + reply?.name}
+                  </strong>
+                  <small>
+                    {(edit || reply)?.text || (edit || reply)?.fileName}
+                  </small>
+                </span>
+                <button
+                  onClick={() => {
+                    setReply(null);
+                    setEdit(null);
+                    if (edit) setText("");
+                  }}
+                  aria-label="Cancel reply or edit"
+                >
+                  <X size={17} />
+                </button>
+              </div>
+            )}
+            {(upload || uploadProgress >= 0) && (
+              <div className="composer-context">
+                <Image size={20} />
+                <span>
+                  <strong>
+                    {uploadProgress >= 0
+                      ? "Uploading your moment… " + uploadProgress + "%"
+                      : upload?.name}
+                  </strong>
+                  <small>
+                    {uploadProgress >= 0
+                      ? "A little patience. Almost there."
+                      : "Ready to send"}
+                  </small>
+                </span>
+                <button
+                  onClick={() => {
+                    uploadRequest.current?.abort();
+                    setUpload(null);
+                  }}
+                  aria-label="Remove attachment"
+                >
+                  <X size={17} />
+                </button>
+              </div>
+            )}
+            {recordPreview && (
+              <div className="record-preview">
+                <button
+                  aria-label="Discard voice note"
+                  onClick={() => setRecordPreview(null)}
+                >
+                  <Trash2 size={18} />
+                </button>
+                <audio controls src={recordUrl} />
+                <button
+                  className="text-link"
+                  onClick={() => {
+                    const type = recordPreview.type.split(";")[0];
+                    uploadFile(
+                      new File(
+                        [recordPreview],
+                        "voice-note." +
+                          (type.includes("mp4")
+                            ? "m4a"
+                            : type.includes("ogg")
+                              ? "ogg"
+                              : "webm"),
+                        { type },
+                      ),
+                    );
+                    setRecordPreview(null);
+                  }}
+                >
+                  Attach note <ArrowRight size={15} />
+                </button>
+              </div>
+            )}
+            {recording ? (
+              <div className="recording-bar">
+                <button aria-label="Cancel recording" onClick={cancelRecording}>
+                  <Trash2 size={19} />
+                </button>
+                <i className="record-dot" />
+                <strong>
+                  {paused ? "Paused" : "Recording"}{" "}
+                  {Math.floor(recordSeconds / 60)}:
+                  {String(recordSeconds % 60).padStart(2, "0")}
+                </strong>
+                <span className="record-wave">
+                  {Array.from({ length: 22 }, (_, i) => (
+                    <i
+                      key={i}
+                      style={{ height: 6 + Math.abs(Math.sin(i * 2)) * 22 }}
+                    />
+                  ))}
+                </span>
+                <button
+                  onClick={() => {
+                    if (paused) recorder.current?.resume();
+                    else recorder.current?.pause();
+                    setPaused(!paused);
+                  }}
+                  aria-label={paused ? "Resume recording" : "Pause recording"}
+                >
+                  {paused ? <Play size={18} /> : <Pause size={18} />}
                 </button>
                 <button
-                  className="icon-button image-toggle"
+                  className="stop-record"
+                  onClick={() => recorder.current?.stop()}
+                  aria-label="Stop and preview recording"
+                >
+                  <Square size={17} fill="currentColor" />
+                </button>
+              </div>
+            ) : (
+              <div className="composer">
+                <button
+                  className="attach-button"
+                  aria-label="Attach a photo, video or file"
                   onClick={() => fileInput.current?.click()}
-                  aria-label="Share an image"
                 >
-                  <Image size={20} />
+                  <Plus size={23} />
                 </button>
+                <div className="composer-input">
+                  <textarea
+                    ref={input}
+                    rows={1}
+                    maxLength={6000}
+                    placeholder={"Message " + slug + "…"}
+                    aria-label="Your message"
+                    value={text}
+                    onChange={(e) => {
+                      setText(e.target.value);
+                      e.target.style.height = "auto";
+                      e.target.style.height =
+                        Math.min(e.target.scrollHeight, 140) + "px";
+                      if (!demo && Date.now() - lastTyping.current > 2500) {
+                        lastTyping.current = Date.now();
+                        api("rooms/" + slug + "/typing", {}).catch(() => {});
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Enter" &&
+                        !e.shiftKey &&
+                        !e.nativeEvent.isComposing
+                      ) {
+                        e.preventDefault();
+                        send();
+                      }
+                    }}
+                    onPaste={(e) => {
+                      const f = e.clipboardData.files[0];
+                      if (f) {
+                        e.preventDefault();
+                        uploadFile(f);
+                      }
+                    }}
+                  />
+                  <button
+                    className={
+                      "icon-button emoji-toggle " + (emoji ? "selected" : "")
+                    }
+                    onClick={() => setEmoji(!emoji)}
+                    aria-label="Choose an emoji"
+                  >
+                    <Smile size={21} />
+                  </button>
+                  <button
+                    className="icon-button image-toggle"
+                    onClick={() => fileInput.current?.click()}
+                    aria-label="Share an image"
+                  >
+                    <Image size={20} />
+                  </button>
+                  <button
+                    className="icon-button"
+                    onClick={startRecording}
+                    aria-label="Record a voice note"
+                  >
+                    <Mic size={21} />
+                  </button>
+                </div>
                 <button
-                  className="icon-button"
-                  onClick={startRecording}
-                  aria-label="Record a voice note"
+                  className="send-button"
+                  onClick={() => send()}
+                  disabled={sending || (!text.trim() && !upload)}
+                  aria-label={edit ? "Save message edit" : "Send message"}
                 >
-                  <Mic size={21} />
+                  {sending ? (
+                    <LoaderCircle size={22} className="spin" />
+                  ) : edit ? (
+                    <Check size={23} />
+                  ) : (
+                    <Send size={22} />
+                  )}
                 </button>
               </div>
-              <button
-                className="send-button"
-                onClick={() => send()}
-                disabled={sending || (!text.trim() && !upload)}
-                aria-label={edit ? "Save message edit" : "Send message"}
-              >
-                {sending ? (
-                  <LoaderCircle size={22} className="spin" />
-                ) : edit ? (
-                  <Check size={23} />
-                ) : (
-                  <ArrowRight size={24} />
-                )}
-              </button>
+            )}
+            {emoji && (
+              <EmojiPicker
+                onClose={() => setEmoji(false)}
+                onSelect={(e) => {
+                  setText((t) => t + e);
+                }}
+              />
+            )}
+            <div className="composer-hint">
+              <span>
+                <span className="live-dot" />{" "}
+                {demo
+                  ? "Demo · try it out"
+                  : "A little closer, wherever you are."}
+              </span>
+              <span>
+                Enter to send <i>·</i> Shift + Enter for a new line
+              </span>
             </div>
-          )}
-          {emoji && (
-            <EmojiPicker
-              onClose={() => setEmoji(false)}
-              onSelect={(e) => {
-                setText((t) => t + e);
-              }}
-            />
-          )}
-          <div className="composer-hint">
-            <span>
-              <span className="live-dot" />{" "}
-              {demo
-                ? "Demo · try it out"
-                : "A little closer, wherever you are."}
-            </span>
-            <span>
-              Enter to send <i>·</i> Shift + Enter for a new line
-            </span>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
       <input
         ref={fileInput}
         type="file"

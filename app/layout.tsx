@@ -9,6 +9,7 @@ import "./emoji-expressions.css";
 import "./creator.css";
 import "./harmony.css";
 import "./music.css";
+import "./studio.css";
 
 export const metadata: Metadata = {
   title: "DropBy — Good conversations. Just a link away.",
