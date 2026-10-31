@@ -13,6 +13,7 @@ import "./studio.css";
 import "./love.css";
 import "./football.css";
 import "./arcade.css";
+import "./cosmic.css";
 
 export const metadata: Metadata = {
   title: "DropBy — Good conversations. Just a link away.",

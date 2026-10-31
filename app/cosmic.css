@@ -1,0 +1,166 @@
+/* Soft orbital forms and starlight glass, with the supplied ringworld panoramas. */
+.chat-app.theme-cosmic {
+  --conversation-surface: color-mix(
+    in srgb,
+    var(--room-panel) calc(var(--glass-opacity, 0.87) * 78%),
+    transparent
+  );
+  --panel-action-bg: var(--room-soft);
+  --panel-action-ink: var(--room-ink);
+  --panel-action-border: var(--room-line);
+  --cosmic-shadow: #34316b29;
+  --cosmic-highlight: #fffcffd1;
+  --cosmic-glow: #d9adff30;
+  --cosmic-chrome: color-mix(in srgb, var(--room-panel) 94%, transparent);
+}
+[data-mode="dark"] .chat-app.theme-cosmic {
+  --conversation-surface: color-mix(
+    in srgb,
+    var(--room-panel) calc(var(--glass-opacity, 0.87) * 82%),
+    transparent
+  );
+  --cosmic-shadow: #080c2566;
+  --cosmic-highlight: #dcd0ff2b;
+  --cosmic-glow: #a58cfa26;
+}
+.chat-app.theme-cosmic .room-header,
+.chat-app.theme-cosmic .room-rail,
+.chat-app.theme-cosmic .conversation-shell {
+  border-color: var(--cosmic-highlight);
+  box-shadow:
+    0 10px 35px var(--cosmic-shadow),
+    inset 0 1px var(--cosmic-highlight),
+    0 0 24px var(--cosmic-glow);
+}
+.chat-app.theme-cosmic .conversation-toolbar {
+  background: var(--cosmic-chrome);
+  border-radius: 25px 25px 0 0;
+  padding-block: 9px;
+}
+.chat-app.theme-cosmic .conversation-heading > svg {
+  color: var(--accent);
+}
+.chat-app.theme-cosmic .conversation-toolbar > .music-dock {
+  background: var(--room-soft);
+  border-radius: 24px;
+}
+.chat-app.theme-cosmic .music-record {
+  background: var(--room-panel);
+  color: var(--accent);
+  box-shadow: 0 0 0 3px var(--cosmic-glow);
+}
+.chat-app.theme-cosmic .music-panel,
+.chat-app.theme-cosmic .room-panel,
+.chat-app.theme-cosmic .emoji-picker,
+.chat-app.theme-cosmic .message-menu {
+  border-color: var(--cosmic-highlight);
+  box-shadow: 0 16px 50px var(--cosmic-shadow);
+}
+.chat-app.theme-cosmic .conversation-shell .composer-area {
+  background: var(--cosmic-chrome);
+  border-top: 1px solid var(--room-line);
+  border-radius: 0 0 25px 25px;
+}
+.chat-app.theme-cosmic .composer {
+  background: var(--room-panel);
+  border-radius: 25px;
+  box-shadow: 0 3px 15px var(--cosmic-shadow);
+}
+.chat-app.theme-cosmic .composer:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
+}
+.chat-app.theme-cosmic .send-button,
+.chat-app.theme-cosmic .attach-button,
+.chat-app.theme-cosmic .room-header-actions > .icon-button {
+  border-radius: 50%;
+}
+.chat-app.theme-cosmic .room-header-actions > .room-call-action,
+.chat-app.theme-cosmic .room-header-actions > .room-invite-action {
+  border-radius: 24px;
+}
+.chat-app.theme-cosmic .send-button:not(:disabled) {
+  box-shadow: 0 3px 15px var(--cosmic-glow);
+}
+.chat-app.theme-cosmic .room-home,
+.chat-app.theme-cosmic .room-welcome-icon,
+.chat-app.theme-cosmic .rail-item {
+  border-radius: 50%;
+}
+.chat-app.theme-cosmic .rail-item.active {
+  box-shadow: inset 0 0 0 1px var(--room-line);
+}
+.chat-app.theme-cosmic .message-bubble {
+  box-shadow:
+    0 3px 12px var(--cosmic-shadow),
+    inset 0 1px var(--cosmic-highlight);
+}
+.chat-app.theme-cosmic .own .message-bubble {
+  border: 1px solid var(--cosmic-highlight);
+  box-shadow: 0 4px 15px var(--cosmic-shadow);
+}
+.chat-app.theme-cosmic .message-bubble.emoji-only {
+  border-color: transparent;
+  box-shadow: none;
+}
+.chat-app.theme-cosmic .message-byline,
+.chat-app.theme-cosmic .message-receipt,
+.chat-app.theme-cosmic .typing-indicator {
+  text-shadow:
+    0 1px 5px var(--room-panel),
+    0 0 10px var(--room-panel);
+}
+.chat-app.theme-cosmic .message-reactions button,
+.chat-app.theme-cosmic .chat-date > span {
+  background: var(--room-panel);
+  border-radius: 20px;
+}
+.chat-app.theme-cosmic .message-reactions button.mine {
+  background: var(--room-soft);
+}
+.chat-app.theme-cosmic .has-conversation .room-welcome {
+  background: var(--cosmic-chrome);
+  box-shadow: 0 3px 15px var(--cosmic-shadow);
+}
+/* The artwork supplies the planets and haze; a few stars add restrained motion. */
+.scene-cosmic .cosmic-orbit,
+.scene-cosmic .cosmic-haze,
+.scene-cosmic .cosmic-star:nth-of-type(n + 9) {
+  display: none;
+}
+.scene-cosmic .cosmic-star {
+  background: var(--accent);
+  opacity: 0.35;
+}
+.theme-thumb.theme-cosmic:before {
+  background: url("/themes/cosmic-light.png") center / cover;
+}
+[data-mode="dark"] .theme-thumb.theme-cosmic:before {
+  background-image: url("/themes/cosmic-dark.png");
+}
+.theme-thumb.theme-cosmic b {
+  background: #f9f7ff;
+  border-radius: 8px 8px 8px 2px;
+}
+.theme-thumb.theme-cosmic b:nth-child(2) {
+  background: #62459d;
+  border-radius: 8px 8px 2px 8px;
+}
+[data-mode="dark"] .theme-thumb.theme-cosmic b {
+  background: #25283f;
+}
+[data-mode="dark"] .theme-thumb.theme-cosmic b:nth-child(2) {
+  background: #6744a4;
+}
+@media (max-width: 700px) {
+  .chat-app.theme-cosmic .conversation-toolbar {
+    border-radius: 20px 20px 0 0;
+    padding-block: 7px;
+  }
+  .chat-app.theme-cosmic .conversation-shell .composer-area {
+    border-radius: 0 0 20px 20px;
+  }
+  .chat-app.theme-cosmic .composer {
+    border-radius: 23px;
+  }
+}
