@@ -40,7 +40,15 @@ export function Avatar({
       style={{ background: color ? color + "28" : undefined }}
       aria-label={name}
     >
-      {avatar || name.slice(0, 2).toUpperCase()}
+      {avatar?.startsWith("media:") ? (
+        <img
+          src={"/api/media/" + encodeURIComponent(avatar.slice(6))}
+          alt=""
+          loading="lazy"
+        />
+      ) : (
+        avatar || name.slice(0, 2).toUpperCase()
+      )}
     </span>
   );
 }

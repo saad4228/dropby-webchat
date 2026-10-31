@@ -1,4 +1,8 @@
-﻿"use client";
+"use client";
+import { useMediaUpload } from "../hooks/use-media-upload";
+import { UploadProgress } from "./upload-progress";
+import type { MediaPurpose } from "../lib/media-config";
+import type { MediaHints } from "../lib/media-prepare";
 import {
   ArrowLeft,
   ArrowRight,
@@ -29,13 +33,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAppearance } from "../hooks/use-appearance";
 import { useCall } from "../hooks/use-call";
 import { useVoiceRecorder } from "../hooks/use-voice-recorder";
-import {
-  Identity,
-  Message as Msg,
-  Snapshot,
-  api,
-  parseApiResponse,
-} from "../lib/client";
+import { Identity, Message as Msg, Snapshot, api } from "../lib/client";
 import { demoSnapshot } from "../lib/demo";
 import { contrastText } from "../lib/format";
 import { getTheme } from "../lib/themes";
@@ -92,7 +90,6 @@ export default function Chat({
       mime: string;
       size: number;
     } | null>(null),
-    [uploadProgress, setUploadProgress] = useState(-1),
     [emoji, setEmoji] = useState(false),
     [viewer, setViewer] = useState<Msg | null>(null),
     [older, setOlder] = useState<Msg[]>([]),
@@ -110,7 +107,6 @@ export default function Chat({
     fileInput = useRef<HTMLInputElement>(null),
     lastTyping = useRef(0),
     fetching = useRef(false),
-    uploadRequest = useRef<XMLHttpRequest | null>(null),
     initialScroll = useRef(true),
     nearBottom = useRef(true),
     firstLoad = useRef(true);
@@ -129,12 +125,22 @@ export default function Chat({
     seconds: recordSeconds,
     preview: recordPreview,
     previewUrl: recordUrl,
+    hints: recordHints,
     start: startRecording,
     cancel: cancelRecording,
     togglePause,
     stop: stopRecording,
     clearPreview,
   } = useVoiceRecorder(demo, notify);
+  const transfer = useMediaUpload(
+    slug,
+    user.id,
+    (file) => {
+      setUpload(file);
+      input.current?.focus();
+    },
+    notify,
+  );
   const refresh = useCallback(async () => {
     if (demo || fetching.current) return;
     fetching.current = true;
@@ -215,7 +221,6 @@ export default function Chat({
     const id = setTimeout(() => setError(""), 6500);
     return () => clearTimeout(id);
   }, [error]);
-  useEffect(() => () => uploadRequest.current?.abort(), []);
   const call = useCall(slug, user.id, demo ? null : data, refresh, notify);
   activeCall.current = call.active;
   useEffect(() => {
@@ -257,6 +262,13 @@ export default function Chat({
     return () => window.removeEventListener("keydown", key);
   }, [viewer?.id, images.length]);
   async function send(retry = false) {
+    if (
+      transfer.state &&
+      ["preparing", "uploading", "paused"].includes(transfer.state.phase)
+    ) {
+      notify("Finish or cancel your upload before sending.");
+      return;
+    }
     const body =
       retry && pending
         ? pending
@@ -455,41 +467,17 @@ export default function Chat({
       setDeleting(false);
     }
   }
-  function uploadFile(file: File) {
+  function uploadFile(
+    file: File,
+    purpose: MediaPurpose = "chat",
+    hints: MediaHints = {},
+  ) {
     if (demo) {
       notify("Create a real room to share and save files.");
       return;
     }
-    if (file.size > 15 * 1024 * 1024) {
-      notify("Choose a file under 15 MB.");
-      return;
-    }
-    setUploadProgress(0);
-    const form = new FormData();
-    form.append("file", file);
-    const xhr = new XMLHttpRequest();
-    uploadRequest.current = xhr;
-    xhr.open("POST", "/api/rooms/" + slug + "/upload");
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable)
-        setUploadProgress(Math.round((e.loaded / e.total) * 100));
-    };
-    xhr.onload = () => {
-      setUploadProgress(-1);
-      try {
-        const result = parseApiResponse(xhr.responseText, xhr.status);
-        setUpload(result.attachment);
-        input.current?.focus();
-      } catch (e: any) {
-        notify(e.message || "The upload did not finish. Try again.");
-      }
-    };
-    xhr.onerror = () => {
-      setUploadProgress(-1);
-      notify("Upload interrupted. Choose your file to try again.");
-    };
-    xhr.onabort = () => setUploadProgress(-1);
-    xhr.send(form);
+    setUpload(null);
+    void transfer.start(file, purpose, hints);
   }
   const togglePanel = (s: string) => setPanel(panel === s ? "" : s);
   const beginCall = (video: boolean) => {
@@ -905,24 +893,34 @@ export default function Chat({
                 </button>
               </div>
             )}
-            {(upload || uploadProgress >= 0) && (
+            {transfer.recoverable && (
+              <button
+                className="resume-upload-note"
+                onClick={() => fileInput.current?.click()}
+              >
+                Resume {transfer.recoverable} — choose the same file to continue
+              </button>
+            )}
+            {transfer.state &&
+              !["idle", "done"].includes(transfer.state.phase) && (
+                <UploadProgress
+                  state={transfer.state}
+                  onPause={transfer.pause}
+                  onResume={transfer.resume}
+                  onRetry={transfer.retry}
+                  onCancel={() => void transfer.cancel()}
+                />
+              )}
+            {upload && (
               <div className="composer-context">
                 <Image size={20} />
                 <span>
-                  <strong>
-                    {uploadProgress >= 0
-                      ? "Uploading your moment… " + uploadProgress + "%"
-                      : upload?.name}
-                  </strong>
-                  <small>
-                    {uploadProgress >= 0
-                      ? "A little patience. Almost there."
-                      : "Ready to send"}
-                  </small>
+                  <strong>{upload.name}</strong>
+                  <small>Ready to send</small>
                 </span>
                 <button
                   onClick={() => {
-                    uploadRequest.current?.abort();
+                    void transfer.cancel();
                     setUpload(null);
                   }}
                   aria-label="Remove attachment"
@@ -955,6 +953,8 @@ export default function Chat({
                               : "webm"),
                         { type },
                       ),
+                      "voice",
+                      recordHints,
                     );
                     clearPreview();
                   }}

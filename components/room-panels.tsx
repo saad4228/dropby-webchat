@@ -1,4 +1,8 @@
-﻿"use client";
+"use client";
+import { StoragePanel } from "./storage-panel";
+import { useMediaUpload } from "../hooks/use-media-upload";
+import { UploadProgress } from "./upload-progress";
+import { formatBytes, UPLOAD_LIMITS } from "../lib/media-config";
 import {
   ArrowUpRight,
   Check,
@@ -24,7 +28,7 @@ import { useState } from "react";
 import { defaultAppearance, type Appearance } from "../lib/appearance-store";
 import { api, Identity, Message, Snapshot } from "../lib/client";
 import { themes } from "../lib/themes";
-import { IMAGE_MIMES, MAX_IMAGE_BYTES } from "../lib/upload-limits";
+import { IMAGE_MIMES } from "../lib/upload-limits";
 import { Avatar } from "./brand";
 import { RoomLogoPicker } from "./room-logo-picker";
 import { RoomMark } from "./room-mark";
@@ -73,6 +77,26 @@ export default function RoomPanels({
     [clearLogoImage, setClearLogoImage] = useState(false),
     [saving, setSaving] = useState(false),
     [reports, setReports] = useState<any[] | null>(null);
+  const wallpaperUpload = useMediaUpload(
+    snapshot.room.slug,
+    user.id,
+    (saved) => {
+      onAppearance({ ...appearance, background: "/api/media/" + saved.id });
+    },
+    onError,
+    "wallpaper",
+  );
+  const logoUpload = useMediaUpload(
+    snapshot.room.slug,
+    user.id,
+    () => {
+      setLogoFile(null);
+      onRefresh();
+      onError("Room settings saved.");
+    },
+    onError,
+    "logo",
+  );
   const online = snapshot.members.filter((m) => m.online).length;
   const owner = snapshot.role === "owner";
   const mod = ["owner", "moderator"].includes(snapshot.role);
@@ -85,6 +109,7 @@ export default function RoomPanels({
     pinned: "Worth keeping",
     settings: "Room details",
     more: "Make yourself at home",
+    storage: "Media storage",
   };
   async function moderate(id: string, action: string) {
     if (
@@ -123,14 +148,11 @@ export default function RoomPanels({
         "PATCH",
       );
       if (logoFile) {
-        const form = new FormData();
-        form.append("file", logoFile);
-        await api("rooms/" + snapshot.room.slug + "/logo", form);
-        setLogoFile(null);
+        await logoUpload.start(logoFile, "logo");
       }
       setClearLogoImage(false);
       onRefresh();
-      onError("Room settings saved.");
+      if (!logoFile) onError("Room settings saved.");
     } catch (e: any) {
       onError(e.message);
     } finally {
@@ -175,6 +197,7 @@ export default function RoomPanels({
             <X size={19} />
           </button>
         </header>
+        {panel === "storage" && snapshot.mediaAdmin && <StoragePanel />}
         {panel === "members" && (
           <>
             <div className="panel-search">
@@ -390,36 +413,49 @@ export default function RoomPanels({
                   }
                 />
               </label>
-              <label className="wallpaper-label">
-                Your own wallpaper
+              <label className="smart-wallpaper">
+                <Image size={17} /> Choose your own wallpaper
                 <input
+                  hidden
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    if (!IMAGE_MIMES.includes(f.type)) {
-                      onError("Choose a JPG, PNG or WebP wallpaper.");
+                  accept={IMAGE_MIMES.join(",")}
+                  aria-label={
+                    "Upload wallpaper (up to " +
+                    formatBytes(UPLOAD_LIMITS.wallpaper) +
+                    ")"
+                  }
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!file) return;
+                    if (demo) {
+                      onError("Create a room to save a personal wallpaper.");
                       return;
                     }
-                    if (f.size > MAX_IMAGE_BYTES) {
-                      onError("Wallpapers can be up to 7 MB.");
-                      return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = () =>
-                      onAppearance({
-                        ...appearance,
-                        background: String(reader.result),
-                      });
-                    reader.readAsDataURL(f);
+                    await wallpaperUpload.start(file, "wallpaper");
                   }}
-                  aria-label="Upload wallpaper (up to 7 MB)"
                 />
-                <small className="wallpaper-limit">
-                  JPG, PNG or WebP · up to 7 MB
-                </small>
               </label>
+              <small className="wallpaper-limit">
+                JPG, PNG, WebP or animated GIF · up to{" "}
+                {formatBytes(UPLOAD_LIMITS.wallpaper)}
+              </small>
+              {wallpaperUpload.recoverable && (
+                <p className="panel-note">
+                  Reselect {wallpaperUpload.recoverable} to resume your
+                  wallpaper upload.
+                </p>
+              )}
+              {wallpaperUpload.state &&
+                wallpaperUpload.state.phase !== "done" && (
+                  <UploadProgress
+                    state={wallpaperUpload.state}
+                    onPause={wallpaperUpload.pause}
+                    onResume={wallpaperUpload.resume}
+                    onRetry={wallpaperUpload.retry}
+                    onCancel={wallpaperUpload.cancel}
+                  />
+                )}
             </details>
             <button
               className="reset-appearance"
@@ -503,7 +539,7 @@ export default function RoomPanels({
                         src={
                           m.attachmentId === "demo-stadium"
                             ? "/stadium.jpg"
-                            : "/api/media/" + m.attachmentId
+                            : "/api/media/" + (m.thumbnailId || m.attachmentId)
                         }
                         alt={m.fileName || "Shared image"}
                       />
@@ -650,6 +686,15 @@ export default function RoomPanels({
                 {saving ? "Saving…" : "Save room settings"}
               </button>
             )}
+            {logoUpload.state && logoUpload.state.phase !== "done" && (
+              <UploadProgress
+                state={logoUpload.state}
+                onPause={logoUpload.pause}
+                onResume={logoUpload.resume}
+                onRetry={logoUpload.retry}
+                onCancel={logoUpload.cancel}
+              />
+            )}
             {mod && (
               <>
                 <button
@@ -732,7 +777,23 @@ export default function RoomPanels({
                   <ArrowUpRight size={15} />
                 </a>
               ))}
-            <button onClick={onIdentity}>
+            {snapshot.mediaAdmin && (
+              <button onClick={() => onError("OPEN:storage")}>
+                <Shield size={19} />
+                Media storage
+                {(snapshot.mediaWarningCount || 0) > 0 && (
+                  <span className="storage-notice-count">
+                    {snapshot.mediaWarningCount}
+                  </span>
+                )}
+              </button>
+            )}
+            <button
+              onClick={() => {
+                onClose();
+                onIdentity();
+              }}
+            >
               <Users size={19} />
               Change your identity
               <ArrowUpRight size={15} />

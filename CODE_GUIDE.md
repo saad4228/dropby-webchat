@@ -1,6 +1,6 @@
 # Reading the DropBy code
 
-Start with one feature and follow its path from the screen to the server. The application uses React for screens, TypeScript for types, D1 for database records, and R2 for uploaded files.
+Start with one feature and follow its path from the screen to the server. The application uses React for screens, TypeScript for types, D1 for database records, and private Supabase Storage for all uploaded files. Missing storage settings return a clear error.
 
 ## Suggested reading order
 
@@ -29,7 +29,10 @@ JSX describes what appears on screen. A hook is a function that owns React state
 | Creator page and contact details | `components/creator-page.tsx`, `lib/creator.ts`, `app/about/page.tsx` |
 | Authentication, permissions, passwords, rate limits | `lib/server-auth.ts` |
 | Shared database queries and HTTP responses | `lib/server-utils.ts` |
-| Input and upload rules | `lib/validation.ts`, `lib/upload-limits.ts` |
+| Input and upload rules | `lib/validation.ts`, `lib/media-config.ts`, `lib/upload-limits.ts` |
+| Browser optimization and transfers | `lib/media-prepare.ts`, `lib/media-upload.ts`, `hooks/use-media-upload.ts` |
+| Private storage, upload leases, estimates and cleanup | `lib/media-storage.ts`, `lib/media-server.ts`, `components/storage-panel.tsx` |
+| Lazy photos, on-demand videos and voice playback | `components/media-content.tsx`, `components/upload-progress.tsx` |
 | Small shared formatting functions | `lib/format.ts` |
 | Interactive preview's example people/messages | `lib/demo.ts` |
 
@@ -38,6 +41,14 @@ JSX describes what appears on screen. A hook is a function that owns React state
 The composer in `chat.tsx` calls `send()`. That calls `api()`, which sends a request to `/api/rooms/:slug/messages`. The API route calls `handle()` in `server.ts`. The server checks membership, validates the message, and saves it. Room refreshes retrieve the saved messages; `message.tsx` renders each one.
 
 Older messages are kept in a separate browser cache. Deletion responses carry message IDs and a deletion version so that cache can remove deleted content. Those checks prevent an older response from bringing deleted messages back.
+
+## Follow a media upload
+
+Start with `media-config.ts`: one place controls formats, limits, thumbnails and warnings. `media-prepare.ts` optimizes images in the browser while keeping GIF bytes intact. `MediaUpload` in `media-upload.ts` manages progress and resumable transfers; `use-media-upload.ts` connects that lifecycle to React.
+
+On the server, `media-server.ts` checks room access and reserves space in D1. `media-storage.ts` makes server-only Supabase calls. Completion checks actual size, format and a signature prefix before allowing a message to reference the file. `media-content.tsx` loads thumbnails near the viewport, video on Play, and each voice note into one reusable audio Blob.
+
+The states describe the lifecycle: `uploading` → `ready` → `attached`. Cancellation uses `cancelled`; removal uses `deleting` → `deleted`. Failed removal stays accounted until storage confirms absence. Read [SMART_MEDIA.md](docs/SMART_MEDIA.md) for configuration and cleanup rules.
 
 ## Read the music player in sections
 
@@ -51,6 +62,12 @@ Older messages are kept in a separate browser cache. Deletion responses carry me
 - The returned JSX — the small dock and expanded music panel.
 
 The synchronization rules are also isolated in `lib/music-sync.ts` and covered by tests.
+
+## Deployment profiles
+
+`wrangler.jsonc` holds the verified standalone account/database identifiers and public defaults. `npm run build:cloudflare` chooses `worker/cloudflare.ts`, strips untrusted account headers, checks the generated binding, and prepares the deployable artifact. It never publishes. `npm run build` preserves managed Sites behavior through `wrangler.sites.jsonc` and `worker/index.ts`. Both use Supabase only.
+
+`scripts/vite/strip-preview-secrets.ts` prevents generated preview-secret files entering build artifacts. `scripts/preview-build.mjs` reads the canonical ignored `.dev.vars` explicitly for local production preview. Read [the release steps](docs/CLOUDFLARE_DEPLOYMENT.md) before changing cloud resources.
 
 ## Styles and supporting files
 

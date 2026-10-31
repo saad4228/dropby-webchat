@@ -1,0 +1,359 @@
+.smart-upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin: 6px 0;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  color: inherit;
+  min-width: 0;
+}
+.smart-upload-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent, #4e6bfa) 13%, transparent);
+  color: var(--accent, #4e6bfa);
+  flex-shrink: 0;
+}
+.smart-upload-copy {
+  min-width: 0;
+  flex: 1;
+}
+.smart-upload-copy strong,
+.smart-upload-copy small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.smart-upload-copy strong {
+  font-size: 12px;
+  font-weight: 650;
+}
+.smart-upload-copy small {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.smart-upload progress,
+.storage-panel progress {
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border: 0;
+  border-radius: 9px;
+  overflow: hidden;
+  margin-top: 7px;
+  accent-color: var(--accent, #4e6bfa);
+}
+.smart-upload progress::-webkit-progress-bar,
+.storage-panel progress::-webkit-progress-bar {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.smart-upload progress::-webkit-progress-value,
+.storage-panel progress::-webkit-progress-value {
+  background: var(--accent, #4e6bfa);
+  border-radius: 9px;
+  transition: width 0.2s;
+}
+.smart-upload-actions {
+  display: flex;
+  gap: 3px;
+}
+.smart-upload-actions button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: inherit;
+  border-radius: 10px;
+}
+.smart-upload-actions button:hover {
+  background: color-mix(in srgb, currentColor 9%, transparent);
+}
+.resume-upload-note {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 14px;
+  font-size: 11px;
+  color: inherit;
+  text-align: left;
+}
+.lazy-image {
+  display: block;
+}
+.media-placeholder {
+  display: block;
+  width: 280px;
+  max-width: 100%;
+  height: 180px;
+  border-radius: 14px;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+}
+.lazy-video {
+  display: block;
+  position: relative;
+  width: 320px;
+  max-width: 100%;
+  min-height: 170px;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  border-radius: 14px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.lazy-video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  max-height: 300px;
+}
+.video-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 9px;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-shadow: 0 1px 6px #0009;
+  background: linear-gradient(transparent, #0004);
+  font-size: 12px;
+}
+.video-play svg {
+  background: #ffffff3d;
+  box-sizing: content-box;
+  padding: 13px;
+  border: 1px solid #ffffff70;
+  border-radius: 50%;
+  backdrop-filter: blur(8px);
+}
+.media-play-error {
+  display: block;
+  padding: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.media-play-error a,
+.voice-error {
+  color: inherit;
+  text-decoration: underline;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.profile-photo-picker {
+  display: flex;
+  align-items: center;
+  margin: 12px 0;
+  gap: 6px;
+}
+.profile-photo-picker > button:first-of-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  text-align: left;
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  color: inherit;
+  border-radius: 14px;
+  padding: 10px 13px;
+  min-width: 0;
+  font-size: 12px;
+}
+.profile-photo-picker span {
+  overflow-wrap: anywhere;
+}
+.profile-photo-picker small {
+  display: block;
+  font-size: 10px;
+  margin-top: 3px;
+  opacity: 0.75;
+}
+.smart-wallpaper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px;
+  border: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 12px;
+  margin: 8px 0;
+}
+.smart-wallpaper input {
+  display: none;
+}
+.profile-photo-preview {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.storage-panel {
+  padding: 4px 0;
+}
+.chat-app .room-panel.storage {
+  background: var(--room-panel, var(--surface));
+  color: var(--room-ink);
+  backdrop-filter: blur(20px);
+}
+.storage-panel button.secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: var(--room-soft);
+  color: var(--room-ink);
+  border: 1px solid var(--room-line);
+  border-radius: 12px;
+  min-height: 40px;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+.storage-meter.critical progress::-webkit-progress-value {
+  background: #d57d67;
+}
+.storage-summary {
+  text-align: center;
+  margin: 8px 0 24px;
+}
+.storage-summary > span {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin: auto;
+  border-radius: 19px;
+  background: color-mix(in srgb, var(--accent, #4e6bfa) 12%, transparent);
+  color: var(--accent, #4e6bfa);
+}
+.storage-summary h4 {
+  font-size: 19px;
+  letter-spacing: -0.6px;
+  margin: 13px 0 5px;
+}
+.storage-summary p,
+.storage-meter p {
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1.6;
+}
+.storage-meter {
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 17px;
+}
+.storage-meter strong {
+  font-size: 19px;
+}
+.storage-meter strong small {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+.storage-meter progress {
+  height: 7px;
+  margin: 12px 0 3px;
+}
+.storage-meter.high progress,
+.storage-meter.critical progress {
+  accent-color: #d88955;
+}
+.storage-thresholds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 14px 0;
+}
+.storage-thresholds span {
+  font-size: 10px;
+  padding: 6px 9px;
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 20px;
+  opacity: 0.8;
+}
+.storage-thresholds .reached {
+  border-color: #d88955;
+  opacity: 1;
+}
+.storage-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: color-mix(in srgb, #dfab67 12%, transparent);
+  border-radius: 13px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.storage-notice svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.storage-controls {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+.storage-cleanup {
+  padding: 14px;
+  margin-top: 14px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.storage-cleanup p {
+  margin: 8px 0 14px;
+}
+.media-error {
+  font-size: 12px;
+  line-height: 1.6;
+  color: inherit;
+}
+.room-panel.storage {
+  overflow: auto;
+}
+.room-options .storage-notice-count {
+  margin-left: auto;
+  font-size: 10px;
+  border-radius: 10px;
+  padding: 2px 7px;
+  background: color-mix(in srgb, var(--accent, #4e6bfa) 18%, transparent);
+}
+@media (max-width: 600px) {
+  .smart-upload {
+    gap: 8px;
+    padding: 10px;
+  }
+  .smart-upload-icon {
+    display: none;
+  }
+  .smart-upload-copy strong {
+    font-size: 11px;
+  }
+  .smart-upload-actions button {
+    width: 28px;
+  }
+  .storage-panel {
+    padding: 3px 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .smart-upload progress::-webkit-progress-value {
+    transition: none;
+  }
+}

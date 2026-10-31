@@ -96,7 +96,7 @@ test("Newly received emoji animates on the other browser, including mobile dark 
     ).status(),
   ).toBe(201);
   const context = await browser.newContext({
-      baseURL: "http://localhost:5173",
+      baseURL: process.env.TEST_ORIGIN || "http://localhost:5173",
       viewport: { width: 390, height: 844 },
     }),
     friend = await context.newPage();

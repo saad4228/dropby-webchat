@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { api } from "../lib/client";
 import {
   defaultAppearance,
   loadAppearance,
@@ -27,11 +28,23 @@ export function useAppearance(slug: string, notify: (message: string) => void) {
   function changeAppearance(next: Appearance) {
     touched.current = true;
     setAppearance(next);
-    saveAppearance(slug, next).catch(() =>
-      notify(
-        "Your browser could not save this appearance. It is applied for this visit.",
-      ),
-    );
+    saveAppearance(slug, next)
+      .then(async () => {
+        if (
+          appearance.background.startsWith("/api/media/") &&
+          appearance.background !== next.background
+        )
+          await api(
+            `rooms/${slug}/uploads/${appearance.background.split("/").at(-1)}`,
+            undefined,
+            "DELETE",
+          );
+      })
+      .catch(() =>
+        notify(
+          "Your browser could not save this appearance. It is applied for this visit.",
+        ),
+      );
   }
 
   useEffect(() => {

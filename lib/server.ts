@@ -1,3 +1,19 @@
+import {
+  cleanupAttachment,
+  mediaAdmin,
+  roomMediaRoute,
+  serveMedia,
+  storageAdminRoute,
+} from "./media-server";
+import {
+  MEDIA_CONFIG,
+  mediaSignature,
+  validateMedia,
+  normalizeMime,
+  formatBytes,
+  mediaLimit,
+} from "./media-config";
+import { storagePut } from "./media-storage";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { callConfig } from "./call-token";
@@ -33,7 +49,7 @@ export async function handle(req: Request) {
     const url = new URL(req.url);
     const parts = url.pathname.replace(/^\/api\//, "").split("/");
     const method = req.method;
-    if (method !== "GET") {
+    if (method !== "GET" && method !== "HEAD") {
       const origin = req.headers.get("origin");
       if (origin && origin !== url.origin)
         fail("Cross-origin request rejected.", 403);
@@ -51,7 +67,9 @@ export async function handle(req: Request) {
         });
       }
       if (method !== "POST") fail("Method not allowed.", 405);
-      const identity = identitySchema.parse(await req.json());
+      const { clearAvatarImage, ...identity } = identitySchema.parse(
+        await req.json(),
+      );
       if (user) {
         await run(
           "UPDATE sessions SET name=?,avatar=?,color=? WHERE id=?",
@@ -60,7 +78,23 @@ export async function handle(req: Request) {
           identity.color,
           user.id,
         );
-        return json({ user: { ...user, ...identity } });
+        if (clearAvatarImage && user.avatarImageId) {
+          await run(
+            "UPDATE sessions SET avatarImageId=NULL WHERE id=?",
+            user.id,
+          );
+          await cleanupAttachment(user.avatarImageId).catch(() => {});
+        }
+        return json({
+          user: {
+            ...user,
+            ...identity,
+            avatar:
+              !clearAvatarImage && user.avatarImageId
+                ? "media:" + user.avatarImageId
+                : identity.avatar,
+          },
+        });
       }
       await rate(
         "sessions:" + (req.headers.get("cf-connecting-ip") || "local"),
@@ -140,70 +174,9 @@ export async function handle(req: Request) {
         201,
       );
     }
-    if (parts[0] === "media" && method === "GET") {
-      const a = await first("SELECT * FROM attachments WHERE id=?", parts[1]);
-      if (!a) fail("File unavailable.", 404);
-      const r = await first("SELECT slug FROM rooms WHERE id=?", a!.roomId);
-      if (!r) fail("File unavailable.", 404);
-      await access(r!.slug, user);
-      if (
-        !(await first(
-          "SELECT id FROM messages WHERE attachmentId=? AND deleted=0 UNION ALL SELECT id FROM music_tracks WHERE attachmentId=? LIMIT 1",
-          a!.id,
-          a!.id,
-        ))
-      )
-        fail("File unavailable.", 404);
-      const range = req.headers.get("range");
-      let start = 0,
-        end = a!.size - 1;
-      if (range) {
-        const match = /^bytes=(\d*)-(\d*)$/.exec(range);
-        if (!match || (!match[1] && !match[2]))
-          return new Response(null, {
-            status: 416,
-            headers: { "Content-Range": `bytes */${a!.size}` },
-          });
-        if (!match[1]) start = Math.max(0, a!.size - Number(match[2]));
-        else {
-          start = Number(match[1]);
-          if (match[2]) end = Math.min(end, Number(match[2]));
-        }
-        if (
-          !Number.isSafeInteger(start) ||
-          !Number.isSafeInteger(end) ||
-          start < 0 ||
-          start > end ||
-          start >= a!.size
-        )
-          return new Response(null, {
-            status: 416,
-            headers: { "Content-Range": `bytes */${a!.size}` },
-          });
-      }
-      const object = await env.BUCKET?.get(
-        a!.id,
-        range
-          ? { range: { offset: start, length: end - start + 1 } }
-          : undefined,
-      );
-      if (!object) fail("File unavailable.", 404);
-      return new Response(object!.body, {
-        status: range ? 206 : 200,
-        headers: {
-          "Content-Type": a!.mime,
-          "Content-Length": String(end - start + 1),
-          "Accept-Ranges": "bytes",
-          ...(range
-            ? { "Content-Range": `bytes ${start}-${end}/${a!.size}` }
-            : {}),
-          "Content-Disposition": `${a!.mime === "application/pdf" || a!.mime === "text/plain" ? "attachment" : "inline"}; filename="${a!.name.replace(/[^\w. -]/g, "_")}"`,
-          "X-Content-Type-Options": "nosniff",
-          "Cache-Control": "private, no-store",
-          "Content-Security-Policy": "default-src 'none'; sandbox",
-        },
-      });
-    }
+    if (parts[0] === "storage") return await storageAdminRoute(req, user);
+    if (parts[0] === "media" && method === "GET")
+      return await serveMedia(req, user, parts[1]);
     if (parts[0] !== "rooms" || !parts[1]) fail("Not found.", 404);
     const slug = slugSchema.parse(parts[1]);
     const action = parts[2];
@@ -242,6 +215,8 @@ export async function handle(req: Request) {
       return json({ room: safeRoom(r!) });
     }
     const { room, member } = await access(slug, user);
+    if (action === "uploads")
+      return await roomMediaRoute(req, parts, user, room, member);
     if (action === "music" && parts.length === 3) {
       const musicJson = (value: Record<string, any>) =>
         json({ ...value, serverReceivedAt: requestReceivedAt });
@@ -271,16 +246,7 @@ export async function handle(req: Request) {
     if (action === "logo") {
       if (method === "GET") {
         if (!room.logoImageId) fail("Room image unavailable.", 404);
-        const object = await env.BUCKET?.get(room.logoImageId);
-        if (!object) fail("Room image unavailable.", 404);
-        return new Response(object!.body, {
-          headers: {
-            "Content-Type": object!.httpMetadata?.contentType || "image/jpeg",
-            "Content-Length": String(object!.size),
-            "X-Content-Type-Options": "nosniff",
-            "Cache-Control": "private, no-store",
-          },
-        });
+        return await serveMedia(req, user, room.logoImageId);
       }
       if (method !== "POST") fail("Method not allowed.", 405);
       if (member.role !== "owner")
@@ -290,29 +256,50 @@ export async function handle(req: Request) {
         Number(req.headers.get("content-length") || 0) >
         MAX_IMAGE_BYTES + 65536
       )
-        fail("Room images can be up to 7 MB.", 413);
+        fail(
+          "Room images can be up to " + formatBytes(MAX_IMAGE_BYTES) + ".",
+          413,
+        );
       const form = await req.formData(),
         file = form.get("file");
       if (!(file instanceof File) || !file.size || file.size > MAX_IMAGE_BYTES)
-        fail("Choose a room image up to 7 MB.", 413);
+        fail(
+          "Choose a room image up to " + formatBytes(MAX_IMAGE_BYTES) + ".",
+          413,
+        );
       const f = file as File;
       if (!IMAGE_MIMES.includes(f.type))
         fail("Choose a JPG, PNG or WebP room image.");
       const bytes = new Uint8Array(await f.arrayBuffer());
       if (!imageSignatureMatches(bytes, f.type))
         fail("The room image contents do not match its format.");
-      if (!env.BUCKET) fail("Image storage is unavailable.", 503);
-      const id = "room-logo-" + crypto.randomUUID();
-      await env.BUCKET!.put(id, bytes, {
-        httpMetadata: { contentType: f.type },
-      });
-      try {
-        await run("UPDATE rooms SET logoImageId=? WHERE id=?", id, room.id);
-      } catch (e) {
-        await env.BUCKET!.delete(id);
-        throw e;
-      }
-      if (room.logoImageId) await env.BUCKET!.delete(room.logoImageId);
+      const id = crypto.randomUUID();
+      await roomMediaRoute(
+        new Request(req.url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id,
+            name: f.name,
+            mime: f.type,
+            size: f.size,
+            purpose: "logo",
+          }),
+        }),
+        ["rooms", slug, "uploads"],
+        user,
+        room,
+        member,
+      );
+      const row = (await first("SELECT * FROM attachments WHERE id=?", id))!;
+      await storagePut(row.storagePath, bytes, f.type);
+      await roomMediaRoute(
+        new Request(req.url, { method: "POST" }),
+        ["rooms", slug, "uploads", id, "complete"],
+        user,
+        room,
+        member,
+      );
       return json({ ok: true, logoImageId: id }, 201);
     }
     const now = Date.now();
@@ -347,12 +334,12 @@ export async function handle(req: Request) {
       const [messages, members, reactions, signals, deletedHistory] =
         await Promise.all([
           all(
-            "SELECT m.*,s.name,s.avatar,s.color,a.name AS fileName,a.mime AS fileMime,a.size AS fileSize FROM messages m JOIN sessions s ON s.id=m.senderId LEFT JOIN attachments a ON a.id=m.attachmentId WHERE m.roomId=? AND m.deleted=0 AND m.created<? ORDER BY m.created DESC,m.id DESC LIMIT 100",
+            "SELECT m.*,s.name,CASE WHEN s.avatarImageId IS NOT NULL THEN 'media:' || s.avatarImageId ELSE s.avatar END AS avatar,s.color,a.name AS fileName,a.mime AS fileMime,a.size AS fileSize,a.thumbnailId,a.duration,a.waveform FROM messages m JOIN sessions s ON s.id=m.senderId LEFT JOIN attachments a ON a.id=m.attachmentId WHERE m.roomId=? AND m.deleted=0 AND m.created<? ORDER BY m.created DESC,m.id DESC LIMIT 100",
             room.id,
             before,
           ),
           all(
-            "SELECT s.id,s.name,s.avatar,s.color,m.role,m.lastSeen,m.typingUntil,m.inCall,m.muted,m.banned FROM memberships m JOIN sessions s ON s.id=m.sessionId WHERE m.roomId=? AND m.banned=0",
+            "SELECT s.id,s.name,CASE WHEN s.avatarImageId IS NOT NULL THEN 'media:' || s.avatarImageId ELSE s.avatar END AS avatar,s.color,m.role,m.lastSeen,m.typingUntil,m.inCall,m.muted,m.banned FROM memberships m JOIN sessions s ON s.id=m.sessionId WHERE m.roomId=? AND m.banned=0",
             room.id,
           ),
           all(
@@ -376,6 +363,12 @@ export async function handle(req: Request) {
       return json({
         room: safeRoom(room),
         role: member.role,
+        mediaAdmin: mediaAdmin(user),
+        mediaWarningCount: mediaAdmin(user)
+          ? (await first(
+              "SELECT COUNT(*) AS count FROM media_alerts WHERE acknowledged=0",
+            ))!.count
+          : 0,
         messages: messages.reverse(),
         members: members.map((m) => ({
           ...m,
@@ -428,7 +421,7 @@ export async function handle(req: Request) {
         room.id,
       );
       if (b.clearLogoImage && room.logoImageId)
-        await env.BUCKET?.delete(room.logoImageId);
+        await cleanupAttachment(room.logoImageId);
       return json({ ok: true });
     }
     if (action === "members" && method === "PATCH") {
@@ -478,75 +471,58 @@ export async function handle(req: Request) {
     if (action === "upload" && method === "POST") {
       if (member.muted) fail("Messaging is restricted for this identity.", 403);
       await rate("upload:" + user.id, 20);
-      if (Number(req.headers.get("content-length") || 0) > 16 * 1024 * 1024)
-        fail("Files must be under 15 MB.", 413);
-      const form = await req.formData();
-      const file = form.get("file");
-      if (!(file instanceof File) || !file.size || file.size > 15 * 1024 * 1024)
-        fail("Choose a file under 15 MB.", 413);
-      const f = file as File;
-      const mime = f.type.split(";")[0];
-      if (
-        ![
-          "image/jpeg",
-          "image/png",
-          "image/webp",
-          "image/gif",
-          "video/mp4",
-          "video/webm",
-          "audio/webm",
-          "audio/ogg",
-          "audio/mp4",
-          "audio/mpeg",
-          "application/pdf",
-          "text/plain",
-        ].includes(mime)
-      )
-        fail("This file format is not supported.");
-      const bytes = new Uint8Array(await f.arrayBuffer());
-      const head = Array.from(bytes.slice(0, 12));
-      const ascii = new TextDecoder().decode(bytes.slice(0, 12));
-      const valid =
-        mime === "image/png"
-          ? head.slice(0, 8).join(",") === "137,80,78,71,13,10,26,10"
-          : mime === "image/jpeg"
-            ? head[0] === 255 && head[1] === 216 && head[2] === 255
-            : mime === "image/gif"
-              ? ascii.startsWith("GIF8")
-              : mime === "image/webp"
-                ? ascii.startsWith("RIFF") && ascii.slice(8) === "WEBP"
-                : mime.endsWith("/webm")
-                  ? head.slice(0, 4).join(",") === "26,69,223,163"
-                  : mime === "application/pdf"
-                    ? ascii.startsWith("%PDF-")
-                    : mime === "audio/ogg"
-                      ? ascii.startsWith("OggS")
-                      : mime.endsWith("/mp4")
-                        ? ascii.slice(4, 8) === "ftyp"
-                        : mime === "text/plain"
-                          ? !bytes.includes(0)
-                          : mime === "audio/mpeg"
-                            ? ascii.startsWith("ID3") ||
-                              (head[0] === 255 && (head[1] & 224) === 224)
-                            : false;
-      if (!valid) fail("The file contents do not match its format.");
-      if (!env.BUCKET) fail("Media storage is unavailable.", 503);
+      const form = await req.formData(),
+        f = form.get("file");
+      if (!(f instanceof File)) fail("Choose a file.", 400);
+      const file = f as File,
+        mime = normalizeMime(file.type),
+        invalid = validateMedia({ size: file.size, type: mime });
+      if (invalid)
+        fail(
+          invalid,
+          mediaLimit(mime) && file.size > mediaLimit(mime) ? 413 : 400,
+        );
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (!mediaSignature(bytes, mime))
+        fail("The file contents do not match its format.", 400);
+      // Compatibility for older clients. New clients use the streaming/resumable route.
+      if (file.size > MEDIA_CONFIG.resumableAbove)
+        fail("Refresh DropBy to use resumable uploads for this file.", 413);
       const id = crypto.randomUUID();
-      await env.BUCKET!.put(id, bytes, { httpMetadata: { contentType: mime } });
-      await run(
-        "INSERT INTO attachments (id,roomId,senderId,name,mime,size,created) VALUES (?,?,?,?,?,?,?)",
-        id,
-        room.id,
-        user.id,
-        f.name.slice(0, 180),
-        mime,
-        f.size,
-        now,
+      const initialized = await roomMediaRoute(
+        new Request(req.url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id,
+            name: file.name,
+            mime,
+            size: file.size,
+            purpose: "chat",
+          }),
+        }),
+        ["rooms", slug, "uploads"],
+        user,
+        room,
+        member,
       );
-      return json(
-        { attachment: { id, name: f.name, mime, size: f.size } },
-        201,
+      if (!initialized || !initialized.ok)
+        return initialized || json({ error: "Upload could not start." }, 503);
+      const row = (await first("SELECT * FROM attachments WHERE id=?", id))!;
+      await storagePut(row.storagePath, bytes, mime);
+      const completed = await roomMediaRoute(
+        new Request(req.url, { method: "POST" }),
+        ["rooms", slug, "uploads", id, "complete"],
+        user,
+        room,
+        member,
       );
+      return completed?.ok
+        ? new Response(completed.body, {
+            status: 201,
+            headers: completed.headers,
+          })
+        : completed || json({ error: "Upload could not finish." }, 503);
     }
     if (action === "messages" && parts.length === 3 && method === "DELETE") {
       await rate("clear-messages:" + user.id, 5);
@@ -574,16 +550,12 @@ export async function handle(req: Request) {
         room.id,
         user.id,
       );
-      let cleanupPending = files.length > 0 && !env.BUCKET;
-      if (env.BUCKET)
-        for (let i = 0; i < files.length; i += 100) {
-          try {
-            await env.BUCKET.delete(
-              files.slice(i, i + 100).map((file) => file.id),
-            );
-          } catch {
-            cleanupPending = true;
-          }
+      let cleanupPending = false;
+      for (const file of files)
+        try {
+          await cleanupAttachment(file.id);
+        } catch {
+          cleanupPending = true;
         }
       return json({
         ok: true,
@@ -607,7 +579,7 @@ export async function handle(req: Request) {
       if (
         b.attachmentId &&
         !(await first(
-          "SELECT id FROM attachments WHERE id=? AND roomId=? AND senderId=?",
+          "SELECT id FROM attachments WHERE id=? AND roomId=? AND senderId=? AND state IN ('ready','attached') AND purpose IN ('chat','voice')",
           b.attachmentId,
           room.id,
           user.id,
@@ -625,7 +597,7 @@ export async function handle(req: Request) {
           "Music files belong to the listening player. Upload a separate copy for chat.",
         );
       await run(
-        "INSERT INTO messages (id,roomId,senderId,text,replyId,attachmentId,created) VALUES (?,?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING",
+        "INSERT INTO messages (id,roomId,senderId,text,replyId,attachmentId,created) SELECT ?,?,?,?,?,?,? WHERE ? IS NULL OR EXISTS(SELECT 1 FROM attachments WHERE id=? AND state IN ('ready','attached')) ON CONFLICT(id) DO NOTHING",
         b.id,
         room.id,
         user.id,
@@ -633,7 +605,26 @@ export async function handle(req: Request) {
         b.replyId || null,
         b.attachmentId || null,
         now,
+        b.attachmentId || null,
+        b.attachmentId || null,
       );
+      if (
+        !(await first(
+          "SELECT id FROM messages WHERE id=? AND roomId=? AND senderId=?",
+          b.id,
+          room.id,
+          user.id,
+        ))
+      )
+        fail(
+          "The attachment is no longer available. Please choose it again.",
+          409,
+        );
+      if (b.attachmentId)
+        await run(
+          "UPDATE attachments SET state='attached' WHERE id=?",
+          b.attachmentId,
+        );
       return json({ ok: true, id: b.id }, 201);
     }
     if (action === "messages" && parts[3]) {
@@ -730,8 +721,14 @@ export async function handle(req: Request) {
           db().prepare("DELETE FROM revisions WHERE messageId=?").bind(m!.id),
           db().prepare("DELETE FROM reactions WHERE messageId=?").bind(m!.id),
         ]);
-        if (m!.attachmentId) await env.BUCKET?.delete(m!.attachmentId);
-        return json({ ok: true });
+        let cleanupPending = false;
+        if (m!.attachmentId)
+          try {
+            await cleanupAttachment(m!.attachmentId);
+          } catch {
+            cleanupPending = true;
+          }
+        return json({ ok: true, cleanupPending });
       }
     }
     if (action === "call" && method === "POST") {

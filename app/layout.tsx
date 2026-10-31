@@ -16,6 +16,7 @@ import "./arcade.css";
 import "./cosmic.css";
 import "./retreats.css";
 import "./message-deletion.css";
+import "./media.css";
 
 export const metadata: Metadata = {
   title: "DropBy — Good conversations. Just a link away.",

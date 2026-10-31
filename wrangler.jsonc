@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "dropby-webchat",
+  "account_id": "234db92f4baccedce22a0d455666a638",
+  "main": "worker/cloudflare.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "keep_vars": true,
+  "vars": {
+    "SUPABASE_URL": "https://trufjmrgjxnbwhaylcrc.supabase.co",
+    "SUPABASE_MEDIA_BUCKET": "dropby-media",
+    "MEDIA_STORAGE_BUDGET_BYTES": "1000000000",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dropby-db",
+      "database_id": "1f8d95c5-6ae7-4ae8-b6ec-62260eeb8332",
+      "migrations_dir": "drizzle",
+    },
+  ],
+  "observability": { "enabled": true },
+}

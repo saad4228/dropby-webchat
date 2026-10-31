@@ -13,6 +13,7 @@ export const identitySchema = z.object({
   name: z.string().trim().min(1).max(20),
   avatar: z.string().max(12),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  clearAvatarImage: z.boolean().optional(),
 });
 export const roomSchema = z
   .object({

@@ -29,6 +29,27 @@
       "when": 1793406177432,
       "tag": "0003_aspiring_dagger",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793454531303,
+      "tag": "0004_lively_nicolaos",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1793454774627,
+      "tag": "0005_lonely_kang",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793462788790,
+      "tag": "0006_optimal_masque",
+      "breakpoints": true
     }
   ]
 }

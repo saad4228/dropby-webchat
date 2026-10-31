@@ -35,7 +35,7 @@ test("Rewind is immediate despite server delay, rapid seeks settle on the last c
     },
   });
   const context = await browser.newContext({
-      baseURL: "http://localhost:5173",
+      baseURL: process.env.TEST_ORIGIN || "http://localhost:5173",
     }),
     friend = await context.newPage();
   expect(

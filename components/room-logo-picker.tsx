@@ -1,4 +1,5 @@
-"use client";
+import { formatBytes, validateMedia } from "../lib/media-config";
+("use client");
 import { useEffect, useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
 import { IMAGE_MIMES, MAX_IMAGE_BYTES } from "../lib/upload-limits";
@@ -49,7 +50,9 @@ export function RoomLogoPicker({
             <ImagePlus size={15} />
             {src ? "Change room image" : "Upload room image"}
           </button>
-          <small>JPG, PNG or WebP · up to 7 MB</small>
+          <small>
+            JPG, PNG, WebP or GIF ? up to {formatBytes(MAX_IMAGE_BYTES)}
+          </small>
         </div>
         {src && (
           <button
@@ -102,7 +105,7 @@ export function RoomLogoPicker({
             return;
           }
           if (f.size > MAX_IMAGE_BYTES) {
-            onError("Room images can be up to 7 MB.");
+            onError(validateMedia(f, "logo"));
             return;
           }
           onFile(f);

@@ -151,20 +151,43 @@ for (const { theme, name, paired } of [
     }
 
     // A personal wallpaper still takes priority over the built-in theme in both modes.
+    const slug = `theme-wallpaper-${theme}-${Date.now()}`;
+    expect(
+      (
+        await page.request.post("/api/session", {
+          data: { name: "Theme tester", avatar: "x", color: "#4b6bfa" },
+        })
+      ).ok(),
+    ).toBeTruthy();
+    expect(
+      (
+        await page.request.post("/api/rooms", {
+          data: { slug, visibility: "public" },
+        })
+      ).status(),
+    ).toBe(201);
+    await page.request.patch(`/api/rooms/${slug}/settings`, {
+      data: { theme },
+    });
+    await page.goto("/?room=" + slug);
     await page.getByRole("button", { name: "Change room appearance" }).click();
     await page.locator(".custom-theme summary").click();
     await page
-      .getByLabel("Upload wallpaper (up to 7 MB)")
+      .getByLabel("Upload wallpaper (up to 8 MB)")
       .setInputFiles(`public/themes/${theme}${paired ? "-light" : ""}.png`);
     await expect(page.locator(".chat-scenery")).toHaveCSS(
       "background-image",
-      /blob:/,
+      /\/api\/media\//,
     );
     await page.getByRole("switch", { name: "Dark mode" }).click();
     await expect(page.locator(".chat-scenery")).toHaveCSS(
       "background-image",
-      /blob:/,
+      /\/api\/media\//,
     );
+    const wallpaperId = (await page
+      .locator(".chat-app")
+      .getAttribute("style"))!.match(/\/api\/media\/([a-f0-9-]+)/)![1];
+    await page.request.delete(`/api/rooms/${slug}/uploads/${wallpaperId}`);
     expect(errors).toEqual([]);
   });
 }

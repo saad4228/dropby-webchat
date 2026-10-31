@@ -5,7 +5,7 @@ export function parseApiResponse(text: string, status: number) {
   } catch {
     const message =
       status === 413
-        ? "This upload is too large. Choose a file up to 15 MB."
+        ? "This upload exceeds the supported size for its file type. Choose a smaller file and try again."
         : status === 429
           ? "A little too fast. Please wait a moment."
           : status >= 500
@@ -67,6 +67,9 @@ export type Message = {
   fileName?: string;
   fileMime?: string;
   fileSize?: number;
+  thumbnailId?: string;
+  duration?: number;
+  waveform?: string | number[];
   pinned?: number;
 };
 export type Room = {
@@ -83,6 +86,8 @@ export type Room = {
 export type Snapshot = {
   room: Room;
   role: string;
+  mediaAdmin?: boolean;
+  mediaWarningCount?: number;
   messages: Message[];
   members: Member[];
   reactions: {

@@ -24,7 +24,7 @@ test("People opt in to synchronized MP3 and video audio, with personal and share
     ).status(),
   ).toBe(201);
   const context = await browser.newContext({
-      baseURL: "http://localhost:5173",
+      baseURL: process.env.TEST_ORIGIN || "http://localhost:5173",
     }),
     friend = await context.newPage();
   friend.on("pageerror", (e) => errors.push(e.message));

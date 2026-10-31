@@ -5,11 +5,12 @@ import { readExecutionProfile } from "./scripts/execution-profile.mjs";
 import { configureToolEnvironment } from "./scripts/tool-environment.mjs";
 import { sites } from "./scripts/vite/sites-vite-plugin";
 import { connectorPreview } from "./scripts/vite/connector-preview-plugin.mjs";
+import { stripPreviewSecrets } from "./scripts/vite/strip-preview-secrets";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
 
-const { d1, r2 } = hostingConfig;
+const { d1 } = hostingConfig;
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
@@ -27,14 +28,6 @@ const localBindingConfig = {
         },
       ]
     : [],
-  r2_buckets: r2
-    ? [
-        {
-          binding: r2,
-          bucket_name: "site-creator-r2",
-        },
-      ]
-    : [],
 };
 
 export default defineConfig(async ({ command }) => {
@@ -42,6 +35,24 @@ export default defineConfig(async ({ command }) => {
 
   // Wrangler snapshots its log path while the Cloudflare plugin is imported.
   const { cloudflare } = await import("@cloudflare/vite-plugin");
+
+  if (process.env.DROPBY_DEPLOY_TARGET === "cloudflare") {
+    return {
+      server:
+        process.platform === "win32"
+          ? { watch: { useFsEvents: false, usePolling: true } }
+          : {},
+      plugins: [
+        vinext(),
+        cloudflare({
+          configPath: "./wrangler.jsonc",
+          viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
+          inspectorPort: false,
+        }),
+        stripPreviewSecrets(),
+      ],
+    };
+  }
 
   return {
     server: {
@@ -57,6 +68,7 @@ export default defineConfig(async ({ command }) => {
       sites({ mockAuth: !managedLinux }),
       connectorPreview(),
       cloudflare({
+        configPath: "./wrangler.sites.jsonc",
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
         config: {
@@ -87,6 +99,7 @@ export default defineConfig(async ({ command }) => {
             }
           : {}),
       }),
+      stripPreviewSecrets(),
     ],
   };
 });

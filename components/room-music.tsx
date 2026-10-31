@@ -20,14 +20,15 @@ import {
 import { api } from "../lib/client";
 import {
   MUSIC_ACCEPT,
-  MUSIC_MIMES,
   musicPosition,
   musicTime,
   type MusicSnapshot,
   type MusicPlaybackUpdate,
 } from "../lib/music";
 import { playbackCorrection, musicClockOffset } from "../lib/music-sync";
-import { MAX_FILE_BYTES } from "../lib/upload-limits";
+import { MediaUpload, type TransferState } from "../lib/media-upload";
+import { UploadProgress } from "./upload-progress";
+import { formatBytes, UPLOAD_LIMITS, validateMedia } from "../lib/media-config";
 
 async function fileDuration(file: File) {
   return new Promise<number>((resolve, reject) => {
@@ -117,6 +118,12 @@ export default function RoomMusic({
     [ready, setReady] = useState(false),
     [preparing, setPreparing] = useState(false),
     [audioLoadAttempt, setAudioLoadAttempt] = useState(0);
+  const [musicTransfer, setMusicTransfer] = useState<TransferState | null>(
+    null,
+  );
+  const musicUpload = useRef<MediaUpload | null>(null),
+    lastMusicFile = useRef<File | null>(null);
+  useEffect(() => () => musicUpload.current?.suspend(), []);
   const audio = useRef<HTMLAudioElement>(null),
     root = useRef<HTMLDivElement>(null),
     file = useRef<HTMLInputElement>(null),
@@ -645,15 +652,21 @@ export default function RoomMusic({
     if (uploading) return;
     setUploading(true);
     setError("");
+    lastMusicFile.current = f;
     try {
-      if (!MUSIC_MIMES.includes(f.type))
-        throw new Error("Choose an MP3, M4A, OGG, MP4 or WebM file.");
-      if (f.size > MAX_FILE_BYTES)
-        throw new Error("Songs and videos can be up to 15 MB.");
-      const duration = await fileDuration(f),
-        form = new FormData();
-      form.append("file", f);
-      const { attachment } = await api("rooms/" + slug + "/upload", form);
+      const invalid = validateMedia(f, "music");
+      if (invalid) throw new Error(invalid);
+      const duration = await fileDuration(f);
+      const transfer = new MediaUpload(
+        slug,
+        userId,
+        f,
+        "music",
+        setMusicTransfer,
+        { duration },
+      );
+      musicUpload.current = transfer;
+      const attachment = await transfer.run();
       await command({
         action: "queue",
         attachmentId: attachment.id,
@@ -661,8 +674,9 @@ export default function RoomMusic({
           f.name.replace(/\.[^.]+$/, "").slice(0, 120) || "A little soundtrack",
         duration,
       });
-    } catch (e: any) {
-      setError(e.message);
+      setMusicTransfer(null);
+    } catch (error: any) {
+      if (error.message !== "Upload cancelled.") setError(error.message);
     } finally {
       setUploading(false);
       if (file.current) file.current.value = "";
@@ -1149,6 +1163,18 @@ export default function RoomMusic({
                     Take the DJ seat
                   </button>
                 )}
+              {musicTransfer && (
+                <UploadProgress
+                  state={musicTransfer}
+                  onPause={() => musicUpload.current?.pause()}
+                  onResume={() => musicUpload.current?.resume()}
+                  onRetry={() => {
+                    if (lastMusicFile.current)
+                      void upload(lastMusicFile.current);
+                  }}
+                  onCancel={() => void musicUpload.current?.cancel()}
+                />
+              )}
               {uploading && (
                 <p className="music-uploading" role="status">
                   <LoaderCircle size={14} className="spin" />
@@ -1166,7 +1192,8 @@ export default function RoomMusic({
                 </button>
               )}
               <p className="music-footnote">
-                MP3, M4A, OGG, MP4 or WebM · up to 15 MB.
+                Audio up to {formatBytes(UPLOAD_LIMITS.music)} ? video up to{" "}
+                {formatBytes(UPLOAD_LIMITS.video)}.
                 <br />
                 Videos play as audio. New songs always ask before joining.
               </p>

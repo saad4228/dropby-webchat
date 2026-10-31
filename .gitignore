@@ -45,3 +45,6 @@ yarn-error.log*
 
 # OS metadata
 .DS_Store
+
+# Also ignore accidentally named Worker secret files.
+*.dev.vars

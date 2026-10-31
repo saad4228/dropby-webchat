@@ -10,7 +10,7 @@ test("Plain-text 413 produces an upload error rather than a JSON parse exception
     () => parseApiResponse("Payload Too Large", 413),
     (e) =>
       e.status === 413 &&
-      e.message.includes("15 MB") &&
+      e.message.includes("supported size") &&
       !e.message.includes("Unexpected token"),
   );
 });
@@ -28,8 +28,8 @@ test("JSON application errors and successful responses retain their data", () =>
   );
   assert.deepEqual(parseApiResponse('{"ok":true}', 201), { ok: true });
 });
-test("Wallpaper and room-image file limit is 7 MiB", () =>
-  assert.equal(MAX_IMAGE_BYTES, 7 * 1024 * 1024));
+test("Wallpaper and room-image file limit is 8 MiB", () =>
+  assert.equal(MAX_IMAGE_BYTES, 8 * 1024 * 1024));
 test("Room logos reject spoofed image content", () => {
   assert.equal(
     imageSignatureMatches(

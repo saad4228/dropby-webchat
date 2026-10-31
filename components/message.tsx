@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
+import { MediaImage, MediaVideo, VoicePlayer } from "./media-content";
+import { formatBytes } from "../lib/media-config";
 import { messageTime } from "../lib/format";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   CheckCheck,
   MoreHorizontal,
@@ -12,8 +14,6 @@ import {
   Flag,
   Download,
   FileText,
-  Play,
-  Pause,
   Plus,
 } from "lucide-react";
 import { Avatar } from "./brand";
@@ -21,123 +21,6 @@ import { EmojiPicker } from "./emoji-picker";
 import { Message as Msg, Identity, Snapshot } from "../lib/client";
 import { EmojiText, EmojiGlyph } from "./animated-emoji";
 import { emojiOnly } from "../lib/emoji-motion";
-function VoicePlayer({ src }: { src: string }) {
-  const ref = useRef<HTMLAudioElement>(null),
-    [playing, setPlaying] = useState(false),
-    [progress, setProgress] = useState(0),
-    [duration, setDuration] = useState(0),
-    [speed, setSpeed] = useState(1);
-  const [peaks, setPeaks] = useState<number[] | null>(null);
-  useEffect(() => {
-    const controller = new AbortController();
-    let live = true;
-    fetch(src, { signal: controller.signal })
-      .then((r) => {
-        if (!r.ok) throw new Error("Audio unavailable");
-        return r.arrayBuffer();
-      })
-      .then(async (bytes) => {
-        const context = new OfflineAudioContext(1, 1, 48000);
-        const decoded = await context.decodeAudioData(bytes);
-        if (!live) return;
-        setDuration(decoded.duration);
-        const samples = decoded.getChannelData(0),
-          step = Math.max(1, Math.floor(samples.length / 34));
-        const values = Array.from({ length: 34 }, (_, i) => {
-          let peak = 0;
-          for (
-            let j = i * step;
-            j < Math.min(samples.length, (i + 1) * step);
-            j += Math.max(1, Math.floor(step / 40))
-          )
-            peak = Math.max(peak, Math.abs(samples[j]));
-          return peak;
-        });
-        const max = Math.max(0.01, ...values);
-        setPeaks(values.map((v) => 6 + (v / max) * 22));
-      })
-      .catch(() => {});
-    return () => {
-      live = false;
-      controller.abort();
-    };
-  }, [src]);
-  return (
-    <div className="voice-player">
-      <audio
-        ref={ref}
-        src={src}
-        preload="metadata"
-        onLoadedMetadata={() =>
-          Number.isFinite(ref.current!.duration) &&
-          setDuration(ref.current!.duration)
-        }
-        onTimeUpdate={() => setProgress(ref.current!.currentTime)}
-        onEnded={() => {
-          setPlaying(false);
-          setProgress(0);
-        }}
-      />
-      <button
-        onClick={() => {
-          if (playing) ref.current?.pause();
-          else ref.current?.play().catch(() => setPlaying(false));
-          setPlaying(!playing);
-        }}
-        aria-label={playing ? "Pause voice note" : "Play voice note"}
-      >
-        {playing ? (
-          <Pause size={15} fill="currentColor" />
-        ) : (
-          <Play size={15} fill="currentColor" />
-        )}
-      </button>
-      <div className="voice-wave">
-        <div className="wave">
-          {Array.from({ length: 34 }, (_, i) => (
-            <i
-              key={i}
-              style={{
-                height: peaks?.[i] || 8 + Math.abs(Math.sin(i * 2.4)) * 20,
-                opacity: duration && i / 34 < progress / duration ? 1 : 0.35,
-              }}
-            />
-          ))}
-        </div>
-        <input
-          type="range"
-          aria-label="Seek voice note"
-          min={0}
-          max={duration || 1}
-          step={0.1}
-          value={progress}
-          onChange={(e) => {
-            ref.current!.currentTime = Number(e.target.value);
-            setProgress(Number(e.target.value));
-          }}
-        />
-      </div>
-      <span>
-        {Math.floor((playing ? progress : duration) / 60)}:
-        {String(Math.floor((playing ? progress : duration) % 60)).padStart(
-          2,
-          "0",
-        )}
-      </span>
-      <button
-        className="speed"
-        onClick={() => {
-          const next = speed === 1 ? 1.5 : speed === 1.5 ? 2 : 1;
-          setSpeed(next);
-          ref.current!.playbackRate = next;
-        }}
-        aria-label="Change playback speed"
-      >
-        {speed}×
-      </button>
-    </div>
-  );
-}
 export default function Message({
   message: m,
   user,
@@ -216,29 +99,27 @@ export default function Message({
           {m.attachmentId &&
             (m.fileMime?.startsWith("image/") ? (
               <button className="image-message" onClick={() => onView(m)}>
-                <img
+                <MediaImage
                   src={
                     m.attachmentId === "demo-stadium"
                       ? "/stadium.jpg"
-                      : "/api/media/" + m.attachmentId
+                      : "/api/media/" + (m.thumbnailId || m.attachmentId)
                   }
                   alt={m.fileName || "Shared image"}
-                  loading="lazy"
                 />
               </button>
             ) : m.fileMime?.startsWith("video/") ? (
-              <video
-                src={
-                  m.attachmentId === "demo-stadium"
-                    ? "/stadium.jpg"
-                    : "/api/media/" + m.attachmentId
+              <MediaVideo
+                src={"/api/media/" + m.attachmentId}
+                poster={
+                  m.thumbnailId ? "/api/media/" + m.thumbnailId : undefined
                 }
-                controls
-                playsInline
-                preload="metadata"
+                name={m.fileName || "Shared video"}
               />
             ) : m.fileMime?.startsWith("audio/") ? (
               <VoicePlayer
+                duration={m.duration || 0}
+                waveform={m.waveform}
                 src={
                   m.attachmentId === "demo-stadium"
                     ? "/stadium.jpg"
@@ -254,7 +135,14 @@ export default function Message({
                 <FileText size={26} />
                 <span>
                   <strong>{m.fileName}</strong>
-                  <small>{((m.fileSize || 0) / 1024).toFixed(0)} KB</small>
+                  <small>
+                    {m.fileMime === "application/pdf"
+                      ? "PDF"
+                      : m.fileMime === "text/plain"
+                        ? "Text document"
+                        : "Document"}{" "}
+                    · {formatBytes(m.fileSize || 0)}
+                  </small>
                 </span>
                 <Download size={18} />
               </a>

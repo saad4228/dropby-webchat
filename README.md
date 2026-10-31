@@ -17,7 +17,7 @@ No downloads. No mandatory sign-up. Just your browser.
   <img alt="React 19" src="https://img.shields.io/badge/React-19-202736?logo=react&logoColor=61DAFB">
   <img alt="TypeScript 5.9" src="https://img.shields.io/badge/TypeScript-5.9-202736?logo=typescript&logoColor=3178C6">
   <img alt="Cloudflare Workers" src="https://img.shields.io/badge/Cloudflare-Workers-202736?logo=cloudflare&logoColor=F38020">
-  <img alt="Storage: D1 and R2" src="https://img.shields.io/badge/Storage-D1%20%2B%20R2-202736?logo=cloudflare&logoColor=F38020">
+  <img alt="D1 and private Supabase Storage" src="https://img.shields.io/badge/Storage-D1%20%2B%20Supabase-202736?logo=supabase&logoColor=3ECF8E">
 </p>
 
 **10 room themes · shared music · expressive emojis · voice & video calls**
@@ -44,6 +44,12 @@ DropBy brings the small things that make a conversation feel natural into one pl
 | **Get a little closer** | Start browser voice/video calls, switch devices, or share your screen. Built-in peer calls support up to four people; optional LiveKit configuration supports larger groups. |
 | **Set the atmosphere** | Switch between ten themes with coordinated wallpapers, colors, surfaces, and motion. Choose light/dark mode, personalize the wallpaper, or share the room's theme. |
 | **Keep your space yours** | Owners can manage members, lock joins, and review reports. Every member can delete all their own messages and chat attachments from a room for everyone. |
+
+## Share more, load less
+
+Photos are optimized gently and previewed with thumbnails. GIFs keep their animation; videos and voice notes load when played. Larger uploads support progress, pause/resume, retry, cancellation and recovery after refreshing. Images have an 8 MB cap, videos 30 MB, voice notes 10 MB, documents 15 MB, profile photos 3 MB and wallpapers 8 MB.
+
+Private file access is checked by the Worker. An explicitly configured administrator can review estimated storage, 70/85/95% warnings and abandoned-upload cleanup. Text chat continues when the media budget is full. [Configuration, privacy and cleanup policy →](docs/SMART_MEDIA.md)
 
 ## A different mood for every conversation
 
@@ -102,17 +108,24 @@ npm ci
 npm run build
 ```
 
-Initialize the local database by applying the four migrations in order:
+Initialize a new local database by applying the seven migrations in order. For an existing database, apply only migrations it has not already received:
 
 ```bash
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_green_gargoyle.sql
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_lively_black_tarantula.sql
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0002_yellow_arclight.sql
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0003_aspiring_dagger.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0004_lively_nicolaos.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0005_lonely_kang.sql
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0006_optimal_masque.sql
 npm run dev -- --port 5173
 ```
 
-Open **http://localhost:5173**. Local database and upload state live in the ignored `.wrangler/state` directory. See the [development guide](docs/DEVELOPMENT.md) for deployment, optional TURN/LiveKit settings, storage, and operational details.
+Open **http://localhost:5173**. Local D1 state live in the ignored `.wrangler/state` directory. Follow [smart media setup](docs/SMART_MEDIA.md#configure-the-server) to add server-only Supabase settings to `.dev.vars`. See the [development guide](docs/DEVELOPMENT.md) for hosting and optional calling settings.
+
+## Deploy on your Cloudflare account
+
+Use the [exact Cloudflare setup guide](docs/CLOUDFLARE_DEPLOYMENT.md). The standalone build uses the verified production D1 database and private Supabase bucket, with no R2 binding. `npm run build:cloudflare` prepares and validates the artifact; it does not deploy. Configure the encrypted Worker secret, apply verified pending migrations and configure your real administrator ID before completing the release checklist.
 
 ## Under the hood
 
@@ -121,7 +134,7 @@ Open **http://localhost:5173**. Local database and upload state live in the igno
 | Interface | React 19, TypeScript, locally served Manrope and DM Sans, Lucide icons |
 | App runtime | Vinext, Vite, Cloudflare Workers |
 | Data | Drizzle ORM and Cloudflare D1 |
-| Uploaded media | Cloudflare R2, with authenticated access |
+| Uploaded media | Private Supabase Storage, Worker authorization and TUS resumable uploads |
 | Calls | Browser WebRTC; optional LiveKit SFU |
 | Validation & checks | Zod, Node's test runner, Playwright |
 
@@ -129,7 +142,7 @@ Open **http://localhost:5173**. Local database and upload state live in the igno
 flowchart LR
     browser[Browser · React + TypeScript] --> api[Worker API]
     api --> database[(D1 · rooms and messages)]
-    api --> files[(R2 · uploaded media)]
+    api --> files[(Supabase · private media)]
     browser <-. WebRTC calls .-> peers[Other participants]
 ```
 
@@ -154,7 +167,7 @@ public/        wallpapers, fonts, and static assets
 
 ## Checks that cover the important parts
 
-The suite includes **17 unit tests, 49 API checks, and 30 browser journeys**, covering conversations, permissions, uploads, room themes, calls, music playback, and deleting your own messages. The visual comparison script covers 82 desktop/mobile views.
+The suite includes **28 unit tests, 49 existing API checks, 12 smart-media API checks, 11 isolated storage-failure checks, and 33 browser journeys**, covering conversations, permissions, uploads, room themes, calls, music playback, and deleting your own messages. The visual comparison script covers 82 desktop/mobile views.
 
 With the local server running:
 
@@ -162,6 +175,7 @@ With the local server running:
 npm run typecheck
 npm run test:unit
 npm run test:api
+npm run test:media
 npm run test:e2e
 npm run build
 ```

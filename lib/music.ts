@@ -1,3 +1,4 @@
+import { AUDIO_TYPES, VIDEO_TYPES } from "./media-config.ts";
 export type MusicTrack = {
   id: string;
   attachmentId: string;
@@ -39,14 +40,7 @@ export type MusicPlaybackUpdate = Pick<
   MusicSnapshot,
   "state" | "serverNow" | "serverReceivedAt"
 >;
-export const MUSIC_MIMES = [
-  "audio/mpeg",
-  "audio/mp4",
-  "audio/webm",
-  "audio/ogg",
-  "video/mp4",
-  "video/webm",
-];
+export const MUSIC_MIMES = [...AUDIO_TYPES, ...VIDEO_TYPES];
 export const MUSIC_ACCEPT =
   ".mp3,.m4a,.mp4,.webm,.ogg,audio/mpeg,audio/mp4,audio/webm,audio/ogg,video/mp4,video/webm";
 export function musicPosition(

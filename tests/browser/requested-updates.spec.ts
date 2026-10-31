@@ -73,7 +73,7 @@ test("A large room logo and photo upload persist, and the expanded emoji picker 
     timeout: 20000,
   });
   await page.getByRole("button", { name: "Send message", exact: true }).click();
-  await expect(friend.getByAltText("large-photo.jpg")).toBeVisible();
+  await expect(friend.getByAltText(/large-photo\.(jpg|webp)/)).toBeVisible();
   await page.getByRole("button", { name: "Choose an emoji" }).click();
   await page
     .getByRole("button", { name: "Animals & nature", exact: true })
@@ -102,58 +102,70 @@ test("A large room logo and photo upload persist, and the expanded emoji picker 
   await expect(friend.locator(".room-description textarea")).toHaveCount(0);
   await context.close();
 });
-test("Wallpapers larger than 2 MB persist after reload without localStorage overflow", async ({
+test("Private wallpapers persist after reload without localStorage overflow", async ({
   page,
 }) => {
-  await page.goto("/");
-  await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
-  await page.getByRole("button", { name: "Say something nice..." }).click();
-  await page.getByRole("button", { name: "Change room appearance" }).click();
-  await page.locator(".custom-theme summary").click();
-  await page.getByLabel("Upload wallpaper (up to 7 MB)").setInputFiles({
-    name: "wallpaper.jpg",
-    mimeType: "image/jpeg",
-    buffer: largePhoto(6 * 1024 * 1024),
-  });
-  await expect(page.locator(".chat-app")).toHaveAttribute("style", /blob:/);
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () =>
-          new Promise<number>((resolve, reject) => {
-            const r = indexedDB.open("dropby-personal-appearance", 1);
-            r.onsuccess = () => {
-              const db = r.result;
-              const get = db
-                .transaction("wallpapers")
-                .objectStore("wallpapers")
-                .get("football-night");
-              get.onsuccess = () => {
-                resolve(get.result?.length || 0);
-                db.close();
-              };
-              get.onerror = () => reject(get.error);
-            };
-            r.onerror = () => reject(r.error);
-          }),
-      ),
-    )
-    .toBeGreaterThan(6 * 1024 * 1024);
+  test.setTimeout(60000);
+  const slug = "wallpaper-" + Date.now();
   expect(
-    await page.evaluate(
-      () => localStorage.getItem("dropby-appearance:football-night")!.length,
-    ),
-  ).toBeLessThan(1000);
-  await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
-  await page.getByRole("button", { name: "Say something nice..." }).click();
-  await expect(page.locator(".chat-app")).toHaveAttribute("style", /blob:/);
+    (
+      await page.request.post("/api/session", {
+        data: { name: "Wallpaper owner", avatar: "x", color: "#4b6bfa" },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  expect(
+    (
+      await page.request.post("/api/rooms", {
+        data: { slug, visibility: "public" },
+      })
+    ).status(),
+  ).toBe(201);
+  await page.goto("/?room=" + slug);
   await page.getByRole("button", { name: "Change room appearance" }).click();
   await page.locator(".custom-theme summary").click();
-  await page.getByLabel("Upload wallpaper (up to 7 MB)").setInputFiles({
-    name: "too-large.jpg",
-    mimeType: "image/jpeg",
-    buffer: largePhoto(8 * 1024 * 1024),
-  });
-  await expect(page.getByRole("status")).toContainText("7 MB");
+  await page
+    .getByLabel("Upload wallpaper (up to 8 MB)")
+    .setInputFiles({
+      name: "wallpaper.jpg",
+      mimeType: "image/jpeg",
+      buffer: largePhoto(6 * 1024 * 1024),
+    });
+  await expect(page.locator(".chat-app")).toHaveAttribute(
+    "style",
+    /\/api\/media\//,
+    { timeout: 30000 },
+  );
+  const id = (await page.locator(".chat-app").getAttribute("style"))!.match(
+    /\/api\/media\/([a-f0-9-]+)/,
+  )![1];
+  try {
+    expect(
+      await page.evaluate(
+        (key) => localStorage.getItem(key)!.length,
+        "dropby-appearance:" + slug,
+      ),
+    ).toBeLessThan(1000);
+    await page.reload();
+    await expect(page.locator(".chat-app")).toHaveAttribute(
+      "style",
+      new RegExp(id),
+    );
+    await page.getByRole("button", { name: "Change room appearance" }).click();
+    await page.locator(".custom-theme summary").click();
+    await page
+      .getByLabel("Upload wallpaper (up to 8 MB)")
+      .setInputFiles({
+        name: "too-large.jpg",
+        mimeType: "image/jpeg",
+        buffer: largePhoto(8 * 1024 * 1024 + 1),
+      });
+    await expect(
+      page.getByText("This wallpaper is too large. The maximum is 8 MB.", {
+        exact: true,
+      }),
+    ).toBeVisible();
+  } finally {
+    await page.request.delete(`/api/rooms/${slug}/uploads/${id}`);
+  }
 });

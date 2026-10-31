@@ -1,6 +1,9 @@
 "use client";
+import { MediaUpload, type TransferState } from "../lib/media-upload";
+import { UploadProgress } from "./upload-progress";
+import { ProfilePhotoPicker } from "./profile-photo-picker";
 import { normalizeRoomName } from "../lib/format";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -37,7 +40,9 @@ export default function Onboarding({
     [step, setStep] = useState(initialCreate ? 0 : 1),
     [slug, setSlug] = useState(initial),
     [name, setName] = useState(user?.name || ""),
-    [avatar, setAvatar] = useState(user?.avatar || "🏔️"),
+    [avatar, setAvatar] = useState(
+      (user?.avatar?.startsWith("media:") ? "" : user?.avatar) || "🏔️",
+    ),
     [color, setColor] = useState(user?.color || colors[0]),
     [tab, setTab] = useState("Avatars"),
     [visibility, setVisibility] = useState("public"),
@@ -45,14 +50,35 @@ export default function Onboarding({
     [description, setDescription] = useState(""),
     [logo, setLogo] = useState("✳"),
     [logoFile, setLogoFile] = useState<File | null>(null),
+    [avatarFile, setAvatarFile] = useState<File | null>(null),
+    [clearAvatarImage, setClearAvatarImage] = useState(false),
     [createdSlug, setCreatedSlug] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [missing, setMissing] = useState(false);
+  const [transfer, setTransfer] = useState<TransferState | null>(null);
+  const uploadTask = useRef<MediaUpload | null>(null);
+  useEffect(() => () => uploadTask.current?.suspend(), []);
+  async function upload(
+    file: File,
+    purpose: "logo" | "avatar",
+    ownerId: string,
+  ) {
+    const task = new MediaUpload(
+      normalizeRoomName(slug),
+      ownerId,
+      file,
+      purpose,
+      setTransfer,
+    );
+    uploadTask.current = task;
+    return task.run();
+  }
   const identity = () => ({
     name: name.trim() || "Guest " + Math.floor(1000 + Math.random() * 9000),
     avatar: tab === "Initials" ? "" : avatar,
     color,
+    clearAvatarImage,
   });
   async function join(quick = false) {
     setBusy(true);
@@ -65,7 +91,9 @@ export default function Onboarding({
               name:
                 user?.name ||
                 "Guest " + Math.floor(1000 + Math.random() * 9000),
-              avatar: user?.avatar || "🌿",
+              avatar:
+                (user?.avatar?.startsWith("media:") ? "" : user?.avatar) ||
+                "🌿",
               color: user?.color || colors[0],
             }
           : identity(),
@@ -83,11 +111,13 @@ export default function Onboarding({
           setCreatedSlug(normalized);
         }
         if (logoFile) {
-          const form = new FormData();
-          form.append("file", logoFile);
-          await api("rooms/" + normalized + "/logo", form);
+          await upload(logoFile, "logo", result.user.id);
         }
       } else await api("rooms/" + slug + "/join", { password });
+      if (avatarFile) {
+        const photo = await upload(avatarFile, "avatar", result.user.id);
+        result.user.avatar = "media:" + photo.id;
+      }
       onJoined(normalizeRoomName(slug), result.user);
     } catch (e: any) {
       setError(e.message);
@@ -97,7 +127,13 @@ export default function Onboarding({
     }
   }
   return (
-    <Modal onClose={onClose} className="onboarding">
+    <Modal
+      onClose={() => {
+        void uploadTask.current?.cancel();
+        onClose();
+      }}
+      className="onboarding"
+    >
       <div className="onboarding-cover">
         <span className="onboarding-emblem" aria-hidden="true">
           {step === 0 ? (
@@ -234,11 +270,34 @@ export default function Onboarding({
             />
             <small className="count">{name.length}/20</small>
           </label>
+          <ProfilePhotoPicker
+            file={avatarFile}
+            imageUrl={
+              !clearAvatarImage && user?.avatar?.startsWith("media:")
+                ? "/api/media/" + user.avatar.slice(6)
+                : undefined
+            }
+            onRemove={() => {
+              setClearAvatarImage(true);
+              setAvatarFile(null);
+            }}
+            onFile={(file) => {
+              setAvatarFile(file);
+              if (file) setClearAvatarImage(false);
+            }}
+            onError={setError}
+          />
           <div className="segmented">
             {["Avatars", "Emoji", "Initials"].map((t) => (
               <button
                 className={tab === t ? "selected" : ""}
-                onClick={() => setTab(t)}
+                onClick={() => {
+                  setTab(t);
+                  if (t === "Initials") {
+                    setClearAvatarImage(true);
+                    setAvatarFile(null);
+                  }
+                }}
                 key={t}
               >
                 {t}
@@ -261,7 +320,11 @@ export default function Onboarding({
                 <button
                   key={a}
                   className={avatar === a ? "selected" : ""}
-                  onClick={() => setAvatar(a)}
+                  onClick={() => {
+                    setAvatar(a);
+                    setClearAvatarImage(true);
+                    setAvatarFile(null);
+                  }}
                   style={{ background: color + "18" }}
                   aria-label={"Choose " + a}
                 >
@@ -380,6 +443,18 @@ export default function Onboarding({
             No device permissions until you start a call.
           </small>
         </>
+      )}
+      {transfer && !["done", "idle"].includes(transfer.phase) && (
+        <UploadProgress
+          state={transfer}
+          onPause={() => uploadTask.current?.pause()}
+          onResume={() => uploadTask.current?.resume()}
+          onRetry={() => void join()}
+          onCancel={() => {
+            void uploadTask.current?.cancel();
+            setTransfer(null);
+          }}
+        />
       )}
       {error && (
         <div className="form-error" role="alert">

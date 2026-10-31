@@ -3,6 +3,58 @@ import { randomUUID } from "node:crypto";
 import { writeFileSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { readdirSync } from "node:fs";
+function findDatabase(dir: string): string | undefined {
+  for (const item of readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, item.name);
+    if (item.isDirectory()) {
+      const found = findDatabase(p);
+      if (found) return found;
+    } else if (p.endsWith(".sqlite")) return p;
+  }
+}
+function seedFixture(sql: string, fixturePath: string) {
+  const root = process.env.MEDIA_FIXTURE_ROOT;
+  if (root) {
+    expect(
+      path
+        .resolve(root)
+        .replaceAll("\\", "/")
+        .endsWith("/outputs/media-fixture-project"),
+    ).toBe(true);
+    const db = new DatabaseSync(
+      findDatabase(path.join(root, ".wrangler/state/v3/d1"))!,
+    );
+    try {
+      db.exec("PRAGMA busy_timeout=10000");
+      db.exec(sql);
+    } finally {
+      db.close();
+    }
+    return;
+  }
+  writeFileSync(fixturePath, sql);
+  execFileSync(
+    process.execPath,
+    [
+      "--import",
+      "./scripts/sites-env.mjs",
+      "./node_modules/wrangler/bin/wrangler.js",
+      "d1",
+      "execute",
+      "DB",
+      "--local",
+      "--config",
+      "dist/server/wrangler.json",
+      "--persist-to",
+      ".wrangler/state",
+      "--file",
+      fixturePath,
+    ],
+    { stdio: "pipe" },
+  );
+}
 
 test("Any member can confirm clearing all their messages, including cached older history and uploads", async ({
   page,
@@ -58,26 +110,7 @@ test("Any member can confirm clearing all their messages, including cached older
       .join(",") +
     ";";
   const fixturePath = path.resolve("outputs", slug + ".sql");
-  writeFileSync(fixturePath, sql);
-  execFileSync(
-    process.execPath,
-    [
-      "--import",
-      "./scripts/sites-env.mjs",
-      "./node_modules/wrangler/bin/wrangler.js",
-      "d1",
-      "execute",
-      "DB",
-      "--local",
-      "--config",
-      "dist/server/wrangler.json",
-      "--persist-to",
-      ".wrangler/state",
-      "--file",
-      fixturePath,
-    ],
-    { stdio: "pipe" },
-  );
+  seedFixture(sql, fixturePath);
   const uploadResponse = await friend.request.post(
     `/api/rooms/${slug}/upload`,
     {
@@ -182,26 +215,7 @@ test("Any member can confirm clearing all their messages, including cached older
         tombstones.slice(i, i + 200).join(",") +
         ";",
     );
-  writeFileSync(fixturePath, chunks.join("\n"));
-  execFileSync(
-    process.execPath,
-    [
-      "--import",
-      "./scripts/sites-env.mjs",
-      "./node_modules/wrangler/bin/wrangler.js",
-      "d1",
-      "execute",
-      "DB",
-      "--local",
-      "--config",
-      "dist/server/wrangler.json",
-      "--persist-to",
-      ".wrangler/state",
-      "--file",
-      fixturePath,
-    ],
-    { stdio: "pipe" },
-  );
+  seedFixture(chunks.join("\n"), fixturePath);
   const large = await (
     await page.request.get(`/api/rooms/${slug}?historyFrom=0`)
   ).json();

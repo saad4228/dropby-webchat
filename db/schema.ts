@@ -14,6 +14,7 @@ export const sessions = sqliteTable("sessions", {
   color: text().notNull(),
   expires: integer().notNull(),
   accountId: text().unique(),
+  avatarImageId: text(),
 });
 export const rooms = sqliteTable("rooms", {
   id: text().primaryKey(),
@@ -72,6 +73,25 @@ export const attachments = sqliteTable("attachments", {
   mime: text().notNull(),
   size: integer().notNull(),
   created: integer().notNull(),
+  provider: text().notNull().default("supabase"),
+  storagePath: text(),
+  purpose: text().notNull().default("chat"),
+  state: text().notNull().default("attached"),
+  expectedSize: integer().notNull().default(0),
+  expires: integer(),
+  thumbnailId: text(),
+  parentId: text(),
+  duration: real(),
+  waveform: text(),
+  deletedAt: integer(),
+  resumableUrl: text(),
+});
+export const mediaAlerts = sqliteTable("media_alerts", {
+  id: text().primaryKey(),
+  threshold: integer().notNull(),
+  used: integer().notNull(),
+  created: integer().notNull(),
+  acknowledged: integer().notNull().default(0),
 });
 export const reactions = sqliteTable(
   "reactions",

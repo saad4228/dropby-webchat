@@ -1,3 +1,4 @@
+import { cleanupAttachment } from "./media-server";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { MUSIC_MIMES, musicPosition } from "./music";
@@ -230,7 +231,7 @@ export async function musicCommand(
     fail("Music sharing is restricted for this identity.", 403);
   if (b.action === "queue") {
     const attachment = await first(
-      "SELECT * FROM attachments WHERE id=? AND roomId=? AND senderId=?",
+      "SELECT * FROM attachments WHERE id=? AND roomId=? AND senderId=? AND state IN ('ready','attached') AND purpose IN ('music','chat')",
       b.attachmentId,
       roomId,
       user.id,
@@ -253,7 +254,7 @@ export async function musicCommand(
       fail("This file is already in the player.", 409);
     const id = crypto.randomUUID();
     const inserted = await run(
-      "INSERT INTO music_tracks (id,roomId,attachmentId,title,duration,addedBy,created,played) SELECT ?,?,?,?,?,?,?,0 WHERE (SELECT COUNT(*) FROM music_tracks WHERE roomId=? AND played=0)<20",
+      "INSERT INTO music_tracks (id,roomId,attachmentId,title,duration,addedBy,created,played) SELECT ?,?,?,?,?,?,?,0 WHERE (SELECT COUNT(*) FROM music_tracks WHERE roomId=? AND played=0)<20 AND EXISTS(SELECT 1 FROM attachments WHERE id=? AND state IN ('ready','attached'))",
       id,
       roomId,
       b.attachmentId,
@@ -262,7 +263,13 @@ export async function musicCommand(
       user.id,
       now,
       roomId,
+      b.attachmentId,
     );
+    if (inserted.meta.changes)
+      await run(
+        "UPDATE attachments SET state='attached' WHERE id=?",
+        attachment!.id,
+      );
     if (!inserted.meta.changes)
       fail("The queue is full. Make room before adding another song.", 409);
     await run(
@@ -314,8 +321,7 @@ export async function musicCommand(
     );
     if (await first("SELECT id FROM music_tracks WHERE id=?", track.id))
       fail("This song just started. Refresh the player.", 409);
-    await env.BUCKET?.delete(track.attachmentId);
-    await run("DELETE FROM attachments WHERE id=?", track.attachmentId);
+    await cleanupAttachment(track.attachmentId);
     return musicSnapshot(roomId, user.id);
   }
   if (!state) fail("Add a song to start a listening session.", 409);

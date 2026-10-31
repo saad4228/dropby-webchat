@@ -53,17 +53,24 @@ export async function session(req: Request): Promise<Row | null> {
   const accountId = req.headers.get("oai-authenticated-user-id");
   if (accountId) {
     const account = await first(
-      "SELECT id,name,avatar,color,expires FROM sessions WHERE accountId=?",
+      "SELECT id,name,avatar,avatarImageId,color,expires FROM sessions WHERE accountId=?",
       accountId,
     );
-    if (account) return { ...account, signedIn: true };
+    if (account)
+      return {
+        ...account,
+        avatar: account.avatarImageId
+          ? "media:" + account.avatarImageId
+          : account.avatar,
+        signedIn: true,
+      };
   }
   const token = req.headers
     .get("cookie")
     ?.match(/(?:^|;\s*)dropby_session=([^;]+)/)?.[1];
   if (!token) return null;
   const guest = await first(
-    "SELECT id,name,avatar,color,expires,accountId FROM sessions WHERE tokenHash=? AND expires>?",
+    "SELECT id,name,avatar,avatarImageId,color,expires,accountId FROM sessions WHERE tokenHash=? AND expires>?",
     await hash(token),
     Date.now(),
   );
@@ -75,7 +82,13 @@ export async function session(req: Request): Promise<Row | null> {
       guest.id,
     );
   const { accountId: unused, ...identity } = guest;
-  return { ...identity, signedIn: !!accountId };
+  return {
+    ...identity,
+    avatar: identity.avatarImageId
+      ? "media:" + identity.avatarImageId
+      : identity.avatar,
+    signedIn: !!accountId,
+  };
 }
 export async function access(slug: string, user: Row) {
   const room = await first("SELECT * FROM rooms WHERE slug=?", slug);
