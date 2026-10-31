@@ -1,3 +1,24 @@
+export type Appearance = {
+  theme: string;
+  accent: string;
+  sent: string;
+  received: string;
+  opacity: number;
+  blur: number;
+  background: string;
+  animations: boolean;
+};
+export const defaultAppearance: Appearance = {
+  theme: "",
+  accent: "",
+  sent: "",
+  received: "",
+  opacity: 85,
+  blur: 16,
+  background: "",
+  animations: true,
+};
+
 const backgrounds = new Map<string, string>();
 function database(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

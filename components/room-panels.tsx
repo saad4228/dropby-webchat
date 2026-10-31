@@ -1,53 +1,33 @@
 ﻿"use client";
-import { useState } from "react";
 import {
-  X,
-  Search,
-  Users,
-  Check,
-  Link,
   ArrowUpRight,
+  Check,
   Copy,
   Crown,
-  MoreHorizontal,
-  Lock,
-  Hash,
-  Palette,
   Image,
-  Pin,
-  Settings,
+  Link,
+  Lock,
   LogOut,
+  Moon,
+  MoreHorizontal,
+  Palette,
+  Pin,
+  Search,
+  Settings,
   Shield,
   Sun,
-  Moon,
   Trash2,
+  Users,
+  X,
 } from "lucide-react";
+import { useState } from "react";
+import { defaultAppearance, type Appearance } from "../lib/appearance-store";
+import { api, Identity, Message, Snapshot } from "../lib/client";
+import { themes } from "../lib/themes";
+import { IMAGE_MIMES, MAX_IMAGE_BYTES } from "../lib/upload-limits";
 import { Avatar } from "./brand";
 import { RoomLogoPicker } from "./room-logo-picker";
 import { RoomMark } from "./room-mark";
-import { IMAGE_MIMES, MAX_IMAGE_BYTES } from "../lib/upload-limits";
-import { api, Snapshot, Identity, Message } from "../lib/client";
-import { themes } from "../lib/themes";
-export type Appearance = {
-  theme: string;
-  accent: string;
-  sent: string;
-  received: string;
-  opacity: number;
-  blur: number;
-  background: string;
-  animations: boolean;
-};
-export const defaultAppearance: Appearance = {
-  theme: "",
-  accent: "",
-  sent: "",
-  received: "",
-  opacity: 85,
-  blur: 16,
-  background: "",
-  animations: true,
-};
 export default function RoomPanels({
   panel,
   onClose,

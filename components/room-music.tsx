@@ -165,6 +165,7 @@ export default function RoomMusic({
       role === "owner" ||
       role === "moderator") &&
     !restricted;
+  // Accept ordered snapshots and estimate the difference between server and browser clocks.
   const receive = useCallback(
     (
       next: MusicSnapshot | MusicPlaybackUpdate,
@@ -226,6 +227,7 @@ export default function RoomMusic({
     },
     [],
   );
+  // Queue details refresh slowly; the separate playhead poll runs more frequently.
   const refresh = useCallback(async () => {
     if (demo || polling.current) return;
     polling.current = true;
@@ -338,6 +340,7 @@ export default function RoomMusic({
       document.removeEventListener("keydown", key);
     };
   }, [open]);
+  // Keep the local audio near the shared playhead without repeatedly interrupting buffering.
   const sync = useCallback(() => {
     const d = dataRef.current,
       a = audio.current;
@@ -509,6 +512,7 @@ export default function RoomMusic({
     setSeek(null);
     setError("");
   }, [data?.current?.id]);
+  // Shared commands go through the server, which owns permissions and revision numbers.
   async function command(body: Record<string, unknown>) {
     const seq = ++requestSeq.current,
       started = Date.now();
@@ -530,6 +534,7 @@ export default function RoomMusic({
       setSeek(null);
     }
   }
+  // Preview a seek immediately; commitSeek reconciles the latest choice with the server.
   function previewSeek(value: number) {
     previewPosition.current = value;
     setSeek(value);

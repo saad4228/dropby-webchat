@@ -1,36 +1,31 @@
-﻿"use client";
 import {
   ArrowRight,
   ArrowUpRight,
   Check,
   CheckCheck,
-  ChevronDown,
   Globe,
   Hash,
-  Headphones,
   Heart,
-  Link,
-  Lock,
   MessageCircle,
   Mic,
+  Moon,
   MoreHorizontal,
   Play,
   Plus,
-  Send,
   ShieldCheck,
   Smile,
   Sparkles,
   Sun,
-  Moon,
   Users,
   Video,
-  X,
   Zap,
 } from "lucide-react";
-import { Brand, Avatar, Footer } from "./brand";
 import { useState } from "react";
-import { Modal } from "./modal";
 import { creator } from "../lib/creator";
+import { normalizeRoomName } from "../lib/format";
+import { Avatar, Brand, Footer } from "./brand";
+import { Modal } from "./modal";
+("use client");
 export function DemoChat({
   theme = "alpine",
   onOpen,
@@ -170,7 +165,7 @@ export default function Home({
   const [joinPrompt, setJoinPrompt] = useState(false);
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const s = slug.trim().toLowerCase().replace(/\s+/g, "-");
+    const s = normalizeRoomName(slug);
     if (
       !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s) ||
       s.length < 3 ||

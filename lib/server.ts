@@ -1,152 +1,31 @@
 import { env } from "cloudflare:workers";
-import {
-  identitySchema,
-  roomSchema,
-  slugSchema,
-  messageSchema,
-} from "./validation";
 import { z } from "zod";
+import { callConfig } from "./call-token";
+import { allEmojis } from "./emojis";
+import { musicCommand, musicPlayback, musicSnapshot } from "./music-server";
 import { themeIds } from "./themes";
 import {
-  MAX_IMAGE_BYTES,
   IMAGE_MIMES,
   imageSignatureMatches,
+  MAX_IMAGE_BYTES,
 } from "./upload-limits";
-import { allEmojis } from "./emojis";
-import { callConfig } from "./call-token";
-import { musicCommand, musicSnapshot, musicPlayback } from "./music-server";
+import {
+  identitySchema,
+  messageSchema,
+  roomSchema,
+  slugSchema,
+} from "./validation";
 
-type Row = Record<string, any>;
-const db = () => {
-  if (!env.DB) throw new Error("Database is not configured");
-  return env.DB;
-};
-const first = async (sql: string, ...values: any[]) =>
-  db()
-    .prepare(sql)
-    .bind(...values)
-    .first<Row>();
-const all = async (sql: string, ...values: any[]) =>
-  (
-    await db()
-      .prepare(sql)
-      .bind(...values)
-      .all<Row>()
-  ).results;
-const run = async (sql: string, ...values: any[]) =>
-  db()
-    .prepare(sql)
-    .bind(...values)
-    .run();
-const fail = (message: string, status = 400): never => {
-  throw Object.assign(new Error(message), { status });
-};
-const json = (value: any, status = 200, headers: Record<string, string> = {}) =>
-  Response.json(value, {
-    status,
-    headers: { "Cache-Control": "no-store", ...headers },
-  });
-const hash = async (text: string) =>
-  Array.from(
-    new Uint8Array(
-      await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)),
-    ),
-  )
-    .map((n) => n.toString(16).padStart(2, "0"))
-    .join("");
-async function passwordHash(password: string, salt = crypto.randomUUID()) {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(password),
-    "PBKDF2",
-    false,
-    ["deriveBits"],
-  );
-  const bits = await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      salt: new TextEncoder().encode(salt),
-      iterations: 100000,
-      hash: "SHA-256",
-    },
-    key,
-    256,
-  );
-  return (
-    salt +
-    ":" +
-    Array.from(new Uint8Array(bits))
-      .map((v) => v.toString(16).padStart(2, "0"))
-      .join("")
-  );
-}
-async function rate(key: string, limit: number, window = 60000) {
-  const bucket = Math.floor(Date.now() / window);
-  const k = key + ":" + bucket;
-  const r = await first(
-    "INSERT INTO rate_limits (key,count,expires) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 RETURNING count",
-    k,
-    Date.now() + window,
-  );
-  if (r && r.count > limit)
-    fail("A little too fast. Please wait a moment.", 429);
-}
-async function session(req: Request): Promise<Row | null> {
-  // Sites dispatch owns these verified headers and strips visitor-supplied values.
-  const accountId = req.headers.get("oai-authenticated-user-id");
-  if (accountId) {
-    const account = await first(
-      "SELECT id,name,avatar,color,expires FROM sessions WHERE accountId=?",
-      accountId,
-    );
-    if (account) return { ...account, signedIn: true };
-  }
-  const token = req.headers
-    .get("cookie")
-    ?.match(/(?:^|;\s*)dropby_session=([^;]+)/)?.[1];
-  if (!token) return null;
-  const guest = await first(
-    "SELECT id,name,avatar,color,expires,accountId FROM sessions WHERE tokenHash=? AND expires>?",
-    await hash(token),
-    Date.now(),
-  );
-  if (!guest || (guest.accountId && guest.accountId !== accountId)) return null;
-  if (accountId)
-    await run(
-      "UPDATE sessions SET accountId=? WHERE id=? AND accountId IS NULL",
-      accountId,
-      guest.id,
-    );
-  const { accountId: unused, ...identity } = guest;
-  return { ...identity, signedIn: !!accountId };
-}
-async function access(slug: string, user: Row) {
-  const room = await first("SELECT * FROM rooms WHERE slug=?", slug);
-  if (!room) fail("This room is unavailable.", 404);
-  const member = await first(
-    "SELECT * FROM memberships WHERE roomId=? AND sessionId=?",
-    room!.id,
-    user.id,
-  );
-  if (!member || member.banned)
-    fail(
-      "This room is unavailable. Join with a valid invitation or password.",
-      403,
-    );
-  return { room: room!, member: member! };
-}
-const safeRoom = (r: Row) => ({
-  id: r.id,
-  slug: r.slug,
-  description: r.description,
-  visibility: r.visibility,
-  theme: r.theme,
-  locked: !!r.locked,
-  owner: r.owner,
-  logo: r.logo,
-  logoImageId: r.logoImageId,
-});
-const admin = (m: Row) => m.role === "owner" || m.role === "moderator";
+import {
+  access,
+  admin,
+  hash,
+  passwordHash,
+  rate,
+  safeRoom,
+  session,
+} from "./server-auth";
+import { all, db, fail, first, json, run } from "./server-utils";
 
 export async function handle(req: Request) {
   const requestReceivedAt = Date.now();

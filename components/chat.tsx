@@ -1,186 +1,55 @@
 ﻿"use client";
-import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
   ChevronDown,
-  Hash,
-  Headphones,
   Image,
   Link,
+  LoaderCircle,
   Lock,
   MessageCircle,
   Mic,
   MoreHorizontal,
+  Palette,
   Pause,
   Phone,
-  Pin,
   Play,
   Plus,
-  Search,
   Send,
   Smile,
   Square,
-  Sun,
-  Palette,
-  Moon,
   Trash2,
   Users,
   Video,
-  X,
   WifiOff,
-  LoaderCircle,
-  Volume2,
+  X,
 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useAppearance } from "../hooks/use-appearance";
+import { useCall } from "../hooks/use-call";
+import { useVoiceRecorder } from "../hooks/use-voice-recorder";
 import {
+  Identity,
+  Message as Msg,
+  Snapshot,
   api,
   parseApiResponse,
-  Identity,
-  Snapshot,
-  Message as Msg,
-  colors,
 } from "../lib/client";
-import { loadAppearance, saveAppearance } from "../lib/appearance-store";
-import { EmojiPicker } from "./emoji-picker";
-import { RoomMark } from "./room-mark";
-import { Brand, Avatar } from "./brand";
-import Message from "./message";
-import RoomPanels, { Appearance, defaultAppearance } from "./room-panels";
-import CallPanel from "./call-panel";
-import { useCall } from "../hooks/use-call";
-import { Modal } from "./modal";
+import { demoSnapshot } from "../lib/demo";
+import { contrastText } from "../lib/format";
 import { getTheme } from "../lib/themes";
 import { EmojiMotionControl } from "./animated-emoji";
-import { ThemeScene } from "./theme-scene";
+import { Avatar } from "./brand";
+import CallPanel from "./call-panel";
+import { EmojiPicker } from "./emoji-picker";
+import Message from "./message";
+import { Modal } from "./modal";
+import { RoomMark } from "./room-mark";
 import RoomMusic from "./room-music";
+import RoomPanels from "./room-panels";
 import { RoomRail } from "./room-rail";
-const time = Date.now() - 8 * 60000;
-export function demoSnapshot(user: Identity): Snapshot {
-  return {
-    room: {
-      id: "demo",
-      slug: "football-night",
-      description:
-        "The match is better together. Bring your snacks and your predictions. ⚽",
-      visibility: "public",
-      owner: "aarav",
-      theme: "alpine",
-      locked: false,
-      logo: "⚽",
-    },
-    role: "member",
-    members: [
-      {
-        id: "aarav",
-        name: "Aarav",
-        avatar: "👨🏻",
-        color: "#bf9f89",
-        role: "owner",
-        online: true,
-        typingUntil: 0,
-        inCall: 0,
-        muted: 0,
-      },
-      {
-        id: "zoya",
-        name: "Zoya",
-        avatar: "👩🏽",
-        color: "#d3b59b",
-        role: "member",
-        online: true,
-        typingUntil: 0,
-        inCall: 0,
-        muted: 0,
-      },
-      {
-        ...user,
-        role: "member",
-        online: true,
-        typingUntil: 0,
-        inCall: 0,
-        muted: 0,
-      },
-      {
-        id: "manav",
-        name: "Manav",
-        avatar: "👨🏽‍🦱",
-        color: "#a6b7cc",
-        role: "member",
-        online: true,
-        typingUntil: 0,
-        inCall: 0,
-        muted: 0,
-      },
-    ],
-    messages: [
-      {
-        id: "d1",
-        senderId: "aarav",
-        name: "Aarav",
-        avatar: "👨🏻",
-        color: "#bf9f89",
-        text: "Match starts in 10 minutes! 🔥",
-        created: time,
-      },
-      {
-        id: "d2",
-        senderId: "aarav",
-        name: "Aarav",
-        avatar: "👨🏻",
-        color: "#bf9f89",
-        text: "Who else is watching?",
-        created: time + 2000,
-      },
-      {
-        id: "d3",
-        senderId: user.id,
-        name: user.name,
-        avatar: user.avatar,
-        color: user.color,
-        text: "Let’s go! Snacks are ready 🍿",
-        created: time + 60000,
-      },
-      {
-        id: "d4",
-        senderId: "zoya",
-        name: "Zoya",
-        avatar: "👩🏽",
-        color: "#d3b59b",
-        text: "Best seat in the house. ⚽",
-        attachmentId: "demo-stadium",
-        fileName: "Match night.jpg",
-        fileMime: "image/jpeg",
-        created: time + 100000,
-      },
-      {
-        id: "d5",
-        senderId: "manav",
-        name: "Manav",
-        avatar: "👨🏽‍🦱",
-        color: "#a6b7cc",
-        text: "I’m calling it. 2–1 tonight. What’s your prediction?",
-        created: time + 180000,
-      },
-      {
-        id: "d6",
-        senderId: user.id,
-        name: user.name,
-        avatar: user.avatar,
-        color: user.color,
-        text: "Can’t wait for kickoff! ⚽",
-        created: time + 240000,
-      },
-    ],
-    reactions: [
-      { messageId: "d1", sessionId: "zoya", emoji: "🔥", name: "Zoya" },
-      { messageId: "d1", sessionId: "manav", emoji: "❤️", name: "Manav" },
-      { messageId: "d5", sessionId: "aarav", emoji: "👀", name: "Aarav" },
-    ],
-    signals: [],
-    hasMore: false,
-  };
-}
+import { ThemeScene } from "./theme-scene";
 export default function Chat({
   slug,
   user,
@@ -226,13 +95,6 @@ export default function Chat({
     [uploadProgress, setUploadProgress] = useState(-1),
     [emoji, setEmoji] = useState(false),
     [viewer, setViewer] = useState<Msg | null>(null),
-    [appearance, setAppearance] = useState<Appearance>(defaultAppearance),
-    [wallpaperUrl, setWallpaperUrl] = useState(""),
-    [recording, setRecording] = useState(false),
-    [paused, setPaused] = useState(false),
-    [recordSeconds, setRecordSeconds] = useState(0),
-    [recordPreview, setRecordPreview] = useState<Blob | null>(null),
-    [recordUrl, setRecordUrl] = useState(""),
     [older, setOlder] = useState<Msg[]>([]),
     [olderBusy, setOlderBusy] = useState(false),
     [deleteOpen, setDeleteOpen] = useState(false),
@@ -246,9 +108,6 @@ export default function Chat({
     bottom = useRef<HTMLDivElement>(null),
     input = useRef<HTMLTextAreaElement>(null),
     fileInput = useRef<HTMLInputElement>(null),
-    recorder = useRef<MediaRecorder | null>(null),
-    chunks = useRef<Blob[]>([]),
-    recordStream = useRef<MediaStream | null>(null),
     lastTyping = useRef(0),
     fetching = useRef(false),
     uploadRequest = useRef<XMLHttpRequest | null>(null),
@@ -256,11 +115,26 @@ export default function Chat({
     nearBottom = useRef(true),
     firstLoad = useRef(true);
   const activeCall = useRef(false);
-  const appearanceTouched = useRef(false);
   const notify = useCallback((message: string) => {
     if (message.startsWith("OPEN:")) setPanel(message.slice(5));
     else setError(message);
   }, []);
+  const { appearance, wallpaperUrl, changeAppearance } = useAppearance(
+    slug,
+    notify,
+  );
+  const {
+    recording,
+    paused,
+    seconds: recordSeconds,
+    preview: recordPreview,
+    previewUrl: recordUrl,
+    start: startRecording,
+    cancel: cancelRecording,
+    togglePause,
+    stop: stopRecording,
+    clearPreview,
+  } = useVoiceRecorder(demo, notify);
   const refresh = useCallback(async () => {
     if (demo || fetching.current) return;
     fetching.current = true;
@@ -329,54 +203,6 @@ export default function Chat({
     };
   }, [refresh]);
   useEffect(() => {
-    let live = true;
-    appearanceTouched.current = false;
-    loadAppearance(slug).then((saved) => {
-      if (live && !appearanceTouched.current)
-        setAppearance({ ...defaultAppearance, ...saved });
-    });
-    return () => {
-      live = false;
-    };
-  }, [slug]);
-  function changeAppearance(a: Appearance) {
-    appearanceTouched.current = true;
-    setAppearance(a);
-    saveAppearance(slug, a).catch(() =>
-      notify(
-        "Your browser could not save this appearance. It is applied for this visit.",
-      ),
-    );
-  }
-  useEffect(() => {
-    let live = true,
-      url = "";
-    if (!appearance.background) {
-      setWallpaperUrl("");
-      return;
-    }
-    if (!appearance.background.startsWith("data:image/")) {
-      setWallpaperUrl(appearance.background);
-      return;
-    }
-    // CSS custom properties reject multi-megabyte data URLs. Render a short
-    // object URL while retaining the original image in IndexedDB.
-    fetch(appearance.background)
-      .then((r) => r.blob())
-      .then((blob) => {
-        if (!live) return;
-        url = URL.createObjectURL(blob);
-        setWallpaperUrl(url);
-      })
-      .catch(() =>
-        notify("This wallpaper could not be opened. Choose another image."),
-      );
-    return () => {
-      live = false;
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [appearance.background, notify]);
-  useEffect(() => {
     if (initialScroll.current || nearBottom.current) {
       bottom.current?.scrollIntoView({
         behavior: initialScroll.current ? "instant" : "smooth",
@@ -389,28 +215,7 @@ export default function Chat({
     const id = setTimeout(() => setError(""), 6500);
     return () => clearTimeout(id);
   }, [error]);
-  useEffect(() => {
-    if (!recording || paused) return;
-    const id = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
-    return () => clearInterval(id);
-  }, [recording, paused]);
-  useEffect(
-    () => () => {
-      recorder.current?.state === "recording" && recorder.current.stop();
-      recordStream.current?.getTracks().forEach((t) => t.stop());
-      uploadRequest.current?.abort();
-    },
-    [],
-  );
-  useEffect(() => {
-    if (!recordPreview) {
-      setRecordUrl("");
-      return;
-    }
-    const url = URL.createObjectURL(recordPreview);
-    setRecordUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [recordPreview]);
+  useEffect(() => () => uploadRequest.current?.abort(), []);
   const call = useCall(slug, user.id, demo ? null : data, refresh, notify);
   activeCall.current = call.active;
   useEffect(() => {
@@ -686,53 +491,6 @@ export default function Chat({
     xhr.onabort = () => setUploadProgress(-1);
     xhr.send(form);
   }
-  async function startRecording() {
-    if (demo) {
-      notify("Create a real room to send voice notes.");
-      return;
-    }
-    try {
-      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder)
-        throw new Error("Voice recording is not supported in this browser.");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      recordStream.current = stream;
-      const mime = ["audio/webm", "audio/ogg", "audio/mp4"].find((t) =>
-        MediaRecorder.isTypeSupported(t),
-      );
-      const rec = new MediaRecorder(
-        stream,
-        mime ? { mimeType: mime } : undefined,
-      );
-      recorder.current = rec;
-      chunks.current = [];
-      rec.ondataavailable = (e) => {
-        if (e.data.size) chunks.current.push(e.data);
-      };
-      rec.onstop = () => {
-        if (chunks.current.length)
-          setRecordPreview(new Blob(chunks.current, { type: rec.mimeType }));
-        stream.getTracks().forEach((t) => t.stop());
-        setRecording(false);
-        setPaused(false);
-      };
-      rec.start(250);
-      setRecordSeconds(0);
-      setRecording(true);
-    } catch (e: any) {
-      notify(
-        e.name === "NotAllowedError"
-          ? "Allow microphone access to record a voice note."
-          : e.message,
-      );
-    }
-  }
-  function cancelRecording() {
-    chunks.current = [];
-    if (recorder.current?.state !== "inactive") recorder.current?.stop();
-    recordStream.current?.getTracks().forEach((t) => t.stop());
-    setRecording(false);
-    setRecordPreview(null);
-  }
   const togglePanel = (s: string) => setPanel(panel === s ? "" : s);
   const beginCall = (video: boolean) => {
     if (demo) {
@@ -774,15 +532,15 @@ export default function Chat({
   };
   if (appearance.accent) {
     custom["--accent"] = appearance.accent;
-    custom["--accent-ink"] = contrast(appearance.accent);
+    custom["--accent-ink"] = contrastText(appearance.accent);
   }
   if (appearance.sent) {
     custom["--sent"] = appearance.sent;
-    custom["--sent-text"] = contrast(appearance.sent);
+    custom["--sent-text"] = contrastText(appearance.sent);
   }
   if (appearance.received) {
     custom["--received"] = appearance.received;
-    custom["--received-text"] = contrast(appearance.received);
+    custom["--received-text"] = contrastText(appearance.received);
   }
   if (wallpaperUrl) custom["--custom-wallpaper"] = `url("${wallpaperUrl}")`;
   return (
@@ -1177,7 +935,7 @@ export default function Chat({
               <div className="record-preview">
                 <button
                   aria-label="Discard voice note"
-                  onClick={() => setRecordPreview(null)}
+                  onClick={() => clearPreview()}
                 >
                   <Trash2 size={18} />
                 </button>
@@ -1198,7 +956,7 @@ export default function Chat({
                         { type },
                       ),
                     );
-                    setRecordPreview(null);
+                    clearPreview();
                   }}
                 >
                   Attach note <ArrowRight size={15} />
@@ -1225,18 +983,14 @@ export default function Chat({
                   ))}
                 </span>
                 <button
-                  onClick={() => {
-                    if (paused) recorder.current?.resume();
-                    else recorder.current?.pause();
-                    setPaused(!paused);
-                  }}
+                  onClick={togglePause}
                   aria-label={paused ? "Resume recording" : "Pause recording"}
                 >
                   {paused ? <Play size={18} /> : <Pause size={18} />}
                 </button>
                 <button
                   className="stop-record"
-                  onClick={() => recorder.current?.stop()}
+                  onClick={stopRecording}
                   aria-label="Stop and preview recording"
                 >
                   <Square size={17} fill="currentColor" />
@@ -1510,11 +1264,4 @@ export default function Chat({
 }
 function ArrowUpRightIcon() {
   return <ArrowRight size={14} style={{ transform: "rotate(-35deg)" }} />;
-}
-function contrast(hex: string) {
-  const n = parseInt(hex.slice(1), 16),
-    r = (n >> 16) & 255,
-    g = (n >> 8) & 255,
-    b = n & 255;
-  return r * 0.299 + g * 0.587 + b * 0.114 > 160 ? "#202737" : "#ffffff";
 }

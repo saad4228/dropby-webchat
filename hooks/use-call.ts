@@ -1,7 +1,7 @@
 "use client";
+import type { RemoteParticipant, Room } from "livekit-client";
 import { useEffect, useRef, useState } from "react";
-import { api, Member, Snapshot } from "../lib/client";
-import type { Room, RemoteParticipant } from "livekit-client";
+import { api, Snapshot } from "../lib/client";
 export function useCall(
   slug: string,
   userId: string,

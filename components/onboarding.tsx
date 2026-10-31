@@ -1,4 +1,5 @@
 "use client";
+import { normalizeRoomName } from "../lib/format";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -69,7 +70,7 @@ export default function Onboarding({
             }
           : identity(),
       );
-      const normalized = slug.trim().toLowerCase().replace(/\s+/g, "-");
+      const normalized = normalizeRoomName(slug);
       if (create) {
         if (createdSlug !== normalized) {
           await api("rooms", {
@@ -87,7 +88,7 @@ export default function Onboarding({
           await api("rooms/" + normalized + "/logo", form);
         }
       } else await api("rooms/" + slug + "/join", { password });
-      onJoined(slug.trim().toLowerCase().replace(/\s+/g, "-"), result.user);
+      onJoined(normalizeRoomName(slug), result.user);
     } catch (e: any) {
       setError(e.message);
       setMissing(e.status === 404);
@@ -196,9 +197,7 @@ export default function Onboarding({
             className="primary full"
             onClick={() => {
               if (
-                !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(
-                  slug.trim().toLowerCase().replace(/\s+/g, "-"),
-                ) ||
+                !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalizeRoomName(slug)) ||
                 slug.length < 3 ||
                 slug.length > 48
               ) {

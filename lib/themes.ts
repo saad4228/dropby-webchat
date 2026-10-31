@@ -11,24 +11,15 @@ export const themeIds = [
   "arcade",
 ] as const;
 export type ThemeId = (typeof themeIds)[number];
-export const themes: [
-  {
-    id: ThemeId;
-    name: string;
-    color: string;
-    subtitle: string;
-    icon: string;
-    eyebrow: string;
-  },
-  ...{
-    id: ThemeId;
-    name: string;
-    color: string;
-    subtitle: string;
-    icon: string;
-    eyebrow: string;
-  }[],
-] = [
+export type Theme = {
+  id: ThemeId;
+  name: string;
+  color: string;
+  subtitle: string;
+  icon: string;
+  eyebrow: string;
+};
+export const themes: [Theme, ...Theme[]] = [
   {
     id: "alpine",
     name: "Alpine escape",

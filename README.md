@@ -2,6 +2,8 @@
 
 A browser-based space for your people. Create a public or password-protected room, share a URL, and chat without mandatory account creation.
 
+For a guided reading order, feature-to-file map, and explanation of the larger modules, start with [CODE_GUIDE.md](CODE_GUIDE.md).
+
 ## Local development
 
 Requires Node 22.13+, npm, and a current browser.

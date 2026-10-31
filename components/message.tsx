@@ -1,4 +1,5 @@
 ﻿"use client";
+import { messageTime } from "../lib/format";
 import { useEffect, useRef, useState } from "react";
 import {
   CheckCheck,
@@ -185,12 +186,7 @@ export default function Message({
         {!grouped && !own && (
           <div className="message-byline">
             <strong>{m.name}</strong>
-            <time>
-              {new Date(m.created).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </time>
+            <time>{messageTime(m.created)}</time>
             {!!m.pinned && <Pin size={12} />}
           </div>
         )}
@@ -317,12 +313,7 @@ export default function Message({
         )}
         {own && (
           <div className="message-receipt">
-            <time>
-              {new Date(m.created).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </time>
+            <time>{messageTime(m.created)}</time>
             <CheckCheck size={15} aria-label="Saved to room" />
           </div>
         )}
