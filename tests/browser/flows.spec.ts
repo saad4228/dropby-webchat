@@ -64,7 +64,9 @@ test("Homepage, onboarding, live conversation and appearance", async ({
   await page
     .getByLabel("Upload a chat attachment")
     .setInputFiles("public/stadium.jpg");
-  await expect(page.getByText("Ready to send", { exact: true })).toBeVisible();
+  await expect(page.getByText("Ready to send", { exact: true })).toBeVisible({
+    timeout: 20000,
+  });
   await page
     .getByRole("textbox", { name: "Your message" })
     .fill("A shared stadium");

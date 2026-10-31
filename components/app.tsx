@@ -4,13 +4,16 @@ import Home from "./home";
 import Chat from "./chat";
 import Onboarding from "./onboarding";
 import { Modal } from "./modal";
-import { api, Identity, colors } from "../lib/client";
+import { api, Identity, Snapshot, colors } from "../lib/client";
+import { readAppearance } from "../lib/appearance-store";
+import { preloadTheme } from "../lib/theme-preload";
 import { ArrowRight, Heart, ShieldCheck } from "lucide-react";
 import { creator } from "../lib/creator";
 import { useDarkMode } from "../hooks/use-dark-mode";
 export default function App() {
   const [dark, setDark] = useDarkMode();
   const [user, setUser] = useState<Identity | null>(null),
+    [initialSnapshot, setInitialSnapshot] = useState<Snapshot | null>(null),
     [room, setRoom] = useState(""),
     [demo, setDemo] = useState(false),
     [onboard, setOnboard] = useState<{ slug: string; create: boolean } | null>(
@@ -19,14 +22,21 @@ export default function App() {
     [info, setInfo] = useState("");
   useEffect(() => {
     document.documentElement.dataset.ready = "true";
+    const slug = new URLSearchParams(location.search).get("room");
+    const personalTheme = slug && readAppearance(slug).theme;
+    if (personalTheme) preloadTheme(personalTheme);
+    else if (!slug) preloadTheme("alpine");
     api("session")
       .then(async ({ user }) => {
         setUser(user);
-        const slug = new URLSearchParams(location.search).get("room");
         if (slug) {
           if (user) {
             try {
-              await api("rooms/" + encodeURIComponent(slug));
+              const snapshot: Snapshot = await api(
+                "rooms/" + encodeURIComponent(slug),
+              );
+              preloadTheme(readAppearance(slug).theme || snapshot.room.theme);
+              setInitialSnapshot(snapshot);
               setRoom(slug);
             } catch {
               setOnboard({ slug, create: false });
@@ -44,7 +54,9 @@ export default function App() {
     window.addEventListener("popstate", pop);
     return () => window.removeEventListener("popstate", pop);
   }, []);
-  function joined(slug: string, identity: Identity) {
+  function joined(slug: string, identity: Identity, snapshot: Snapshot) {
+    preloadTheme(readAppearance(slug).theme || snapshot.room.theme);
+    setInitialSnapshot(snapshot);
     setUser(identity);
     setDemo(false);
     setRoom(slug);
@@ -61,6 +73,7 @@ export default function App() {
     <>
       {room || demo ? (
         <Chat
+          initialSnapshot={demo ? null : initialSnapshot}
           key={(demo ? "demo:" : "") + room + identity.id}
           slug={demo ? "football-night" : room}
           user={identity}

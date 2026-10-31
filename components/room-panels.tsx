@@ -28,6 +28,7 @@ import { useState } from "react";
 import { defaultAppearance, type Appearance } from "../lib/appearance-store";
 import { api, Identity, Message, Snapshot } from "../lib/client";
 import { themes } from "../lib/themes";
+import { preloadTheme } from "../lib/theme-preload";
 import { IMAGE_MIMES } from "../lib/upload-limits";
 import { Avatar } from "./brand";
 import { RoomLogoPicker } from "./room-logo-picker";
@@ -306,6 +307,8 @@ export default function RoomPanels({
               {themes.map((t) => (
                 <button
                   key={t.id}
+                  onPointerEnter={() => preloadTheme(t.id)}
+                  onFocus={() => preloadTheme(t.id)}
                   className={
                     ((appearance.theme || snapshot.room.theme) === t.id
                       ? "selected "

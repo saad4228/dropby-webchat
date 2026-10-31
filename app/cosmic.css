@@ -133,10 +133,10 @@
   opacity: 0.35;
 }
 .theme-thumb.theme-cosmic:before {
-  background: url("/themes/cosmic-light.png") center / cover;
+  background: var(--theme-preview) center / cover;
 }
 [data-mode="dark"] .theme-thumb.theme-cosmic:before {
-  background-image: url("/themes/cosmic-dark.png");
+  background-image: var(--theme-preview);
 }
 .theme-thumb.theme-cosmic b {
   background: #f9f7ff;

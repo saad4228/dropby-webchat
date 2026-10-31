@@ -17,7 +17,7 @@ Data: sessions, rooms, memberships, messages, revisions, attachments, reactions,
 - [x] Configurable purpose-specific caps, atomic storage reservations, administrator warnings and explicit retryable cleanup
 - [x] Small group WebRTC calls, signaling and screen sharing; configurable LiveKit adapter
 - [x] Themes, member management, reports and room settings
-- [x] 49 existing API checks, 12 media API checks, 11 isolated storage-failure checks, 28 unit tests, 33 browser journeys, TypeScript validation and an 82-view comparison script
+- [x] 49 existing API checks, 12 media API checks, 11 isolated storage-failure checks, 28 unit tests, 44 browser journeys, TypeScript validation and an 82-view comparison script
 
 Smart-media changes remain local until explicitly approved for deployment. No production migration, secret update, scheduled cleanup job or deployment is performed automatically.
 

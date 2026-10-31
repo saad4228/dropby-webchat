@@ -18,7 +18,7 @@ import {
   MessageCircle,
   UserRound,
 } from "lucide-react";
-import { api, avatars, colors, Identity } from "../lib/client";
+import { api, avatars, colors, Identity, Snapshot } from "../lib/client";
 import { Avatar } from "./brand";
 import { RoomLogoPicker } from "./room-logo-picker";
 import { emojiGroups } from "../lib/emojis";
@@ -34,7 +34,7 @@ export default function Onboarding({
   create: boolean;
   user: Identity | null;
   onClose: () => void;
-  onJoined: (slug: string, user: Identity) => void;
+  onJoined: (slug: string, user: Identity, snapshot: Snapshot) => void;
 }) {
   const [create, setCreate] = useState(initialCreate),
     [step, setStep] = useState(initialCreate ? 0 : 1),
@@ -118,7 +118,9 @@ export default function Onboarding({
         const photo = await upload(avatarFile, "avatar", result.user.id);
         result.user.avatar = "media:" + photo.id;
       }
-      onJoined(normalizeRoomName(slug), result.user);
+      // Open the room with its actual theme and messages already available.
+      const snapshot: Snapshot = await api("rooms/" + normalized);
+      onJoined(normalized, result.user, snapshot);
     } catch (e: any) {
       setError(e.message);
       setMissing(e.status === 404);

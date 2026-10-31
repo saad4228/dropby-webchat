@@ -1,21 +1,21 @@
 /* Six supplied places, each with its own daylight and evening palette. */
 .theme-alpine {
-  --retreat-wallpaper: url("/themes/alpine.png");
+  --retreat-wallpaper: var(--theme-wallpaper);
 }
 .theme-lavender {
-  --retreat-wallpaper: url("/themes/lavender.png");
+  --retreat-wallpaper: var(--theme-wallpaper);
 }
 .theme-ocean {
-  --retreat-wallpaper: url("/themes/ocean.png");
+  --retreat-wallpaper: var(--theme-wallpaper);
 }
 .theme-sunset {
-  --retreat-wallpaper: url("/themes/sunset.png");
+  --retreat-wallpaper: var(--theme-wallpaper);
 }
 .theme-forest {
-  --retreat-wallpaper: url("/themes/forest.png");
+  --retreat-wallpaper: var(--theme-wallpaper);
 }
 .theme-midnight {
-  --retreat-wallpaper: url("/themes/midnight.png");
+  --retreat-wallpaper: var(--theme-wallpaper);
 }
 .chat-app.theme-alpine {
   --accent: #32678a;
@@ -208,7 +208,8 @@
   filter: none;
   background:
     linear-gradient(135deg, #fff8ef08, #e6f3ff14),
-    var(--custom-wallpaper, var(--retreat-wallpaper)) center / cover;
+    var(--custom-wallpaper, var(--retreat-wallpaper)) center / cover,
+    var(--theme-preview) center / cover;
 }
 [data-mode="dark"]
   .chat-app:is(
@@ -222,7 +223,8 @@
   > .chat-scenery {
   background:
     linear-gradient(135deg, #07152526, #11182461),
-    var(--custom-wallpaper, var(--retreat-wallpaper)) center / cover;
+    var(--custom-wallpaper, var(--retreat-wallpaper)) center / cover,
+    var(--theme-preview) center / cover;
 }
 .chat-app:is(
     .theme-alpine,
@@ -428,7 +430,7 @@
     .theme-forest,
     .theme-midnight
   ):before {
-  background: var(--retreat-wallpaper) center / cover;
+  background: var(--theme-preview) center / cover;
   opacity: 1;
   mix-blend-mode: normal;
 }

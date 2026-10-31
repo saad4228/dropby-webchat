@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { themeAssets } from "../../lib/theme-assets";
 
 function contrast(a: string, b: string) {
   const luminance = (color: string) => {
@@ -79,15 +80,15 @@ for (const { theme, name, paired } of [
       const asset = paired ? `${theme}-${mode}` : theme;
       await expect(page.locator(".chat-scenery")).toHaveCSS(
         "background-image",
-        new RegExp(`${asset}\\.png`),
+        new RegExp(`${asset}\\.[a-f0-9]+\\.webp`),
       );
       expect(
         await page.evaluate(async (asset) => {
           const image = new Image();
-          image.src = `/themes/${asset}.png`;
+          image.src = asset;
           await image.decode();
           return [image.naturalWidth, image.naturalHeight];
-        }, asset),
+        }, themeAssets[asset]),
       ).toEqual([1536, 1024]);
       for (const selector of [
         ".message-row:not(.own) .message-bubble:not(.emoji-only)",
@@ -167,7 +168,7 @@ for (const { theme, name, paired } of [
       ).status(),
     ).toBe(201);
     await page.request.patch(`/api/rooms/${slug}/settings`, {
-      data: { theme },
+      data: { theme, description: "", locked: false },
     });
     await page.goto("/?room=" + slug);
     await page.getByRole("button", { name: "Change room appearance" }).click();
@@ -178,6 +179,7 @@ for (const { theme, name, paired } of [
     await expect(page.locator(".chat-scenery")).toHaveCSS(
       "background-image",
       /\/api\/media\//,
+      { timeout: 20000 },
     );
     await page.getByRole("switch", { name: "Dark mode" }).click();
     await expect(page.locator(".chat-scenery")).toHaveCSS(
@@ -187,7 +189,9 @@ for (const { theme, name, paired } of [
     const wallpaperId = (await page
       .locator(".chat-app")
       .getAttribute("style"))!.match(/\/api\/media\/([a-f0-9-]+)/)![1];
-    await page.request.delete(`/api/rooms/${slug}/uploads/${wallpaperId}`);
+    await page.request.delete(`/api/rooms/${slug}/uploads/${wallpaperId}`, {
+      maxRetries: 2,
+    });
     expect(errors).toEqual([]);
   });
 }

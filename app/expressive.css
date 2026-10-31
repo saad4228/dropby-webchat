@@ -255,14 +255,16 @@
   filter: none;
   background:
     linear-gradient(125deg, #fff2f51a, #ffe9f124),
-    var(--custom-wallpaper, url("/themes/love-light.png")), #f4a0bf;
+    var(--custom-wallpaper, var(--theme-wallpaper)), var(--theme-preview),
+    #f4a0bf;
   background-size: cover;
   background-position: center;
 }
 [data-mode="dark"] .chat-app.theme-love > .chat-scenery {
   background:
     linear-gradient(125deg, #200c1b0d, #200c1b26),
-    var(--custom-wallpaper, url("/themes/love-dark.png")), #210b1d;
+    var(--custom-wallpaper, var(--theme-wallpaper)), var(--theme-preview),
+    #210b1d;
   background-size: cover;
 }
 .chat-app.theme-love > .chat-scenery:after {
@@ -325,12 +327,14 @@
   filter: none;
   background:
     linear-gradient(180deg, #e9f7ff1a, #f4fbef24),
-    var(--custom-wallpaper, url("/themes/football-light.png")) center / cover;
+    var(--custom-wallpaper, var(--theme-wallpaper)) center / cover,
+    var(--theme-preview) center / cover;
 }
 [data-mode="dark"] .chat-app.theme-football > .chat-scenery {
   background:
     linear-gradient(180deg, #0715250d, #07152538),
-    var(--custom-wallpaper, url("/themes/football-dark.png")) center / cover;
+    var(--custom-wallpaper, var(--theme-wallpaper)) center / cover,
+    var(--theme-preview) center / cover;
 }
 .chat-app.theme-football > .chat-scenery:after {
   background: none;
@@ -407,12 +411,14 @@
   filter: none;
   background:
     linear-gradient(140deg, #f7ecff0d, #ffefeb1a),
-    var(--custom-wallpaper, url("/themes/cosmic-light.png")) center / cover;
+    var(--custom-wallpaper, var(--theme-wallpaper)) center / cover,
+    var(--theme-preview) center / cover;
 }
 [data-mode="dark"] .chat-app.theme-cosmic > .chat-scenery {
   background:
     linear-gradient(140deg, #10112b0d, #17132c26),
-    var(--custom-wallpaper, url("/themes/cosmic-dark.png")) center / cover;
+    var(--custom-wallpaper, var(--theme-wallpaper)) center / cover,
+    var(--theme-preview) center / cover;
 }
 .chat-app.theme-cosmic > .chat-scenery:after {
   background: none;
@@ -473,12 +479,14 @@
   filter: none;
   background:
     linear-gradient(155deg, #ffeafa0d, #ffe9f51a),
-    var(--custom-wallpaper, url("/themes/arcade-light.png")) center / cover;
+    var(--custom-wallpaper, var(--theme-wallpaper)) center / cover,
+    var(--theme-preview) center / cover;
 }
 [data-mode="dark"] .chat-app.theme-arcade > .chat-scenery {
   background:
     linear-gradient(155deg, #140a200d, #140a2026),
-    var(--custom-wallpaper, url("/themes/arcade-dark.png")) center / cover;
+    var(--custom-wallpaper, var(--theme-wallpaper)) center / cover,
+    var(--theme-preview) center / cover;
 }
 .chat-app.theme-arcade > .chat-scenery:after {
   background: none;

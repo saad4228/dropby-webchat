@@ -64,13 +64,18 @@ async function wallpaper(
     };
   });
 }
-export async function loadAppearance(slug: string) {
-  let saved: any = {};
+export function readAppearance(slug: string): Partial<Appearance> {
   try {
-    saved = JSON.parse(
+    const saved = JSON.parse(
       localStorage.getItem("dropby-appearance:" + slug) || "{}",
     );
+    if (saved && typeof saved === "object" && !Array.isArray(saved))
+      return saved;
   } catch {}
+  return {};
+}
+export async function loadAppearance(slug: string) {
+  const saved = readAppearance(slug);
   try {
     const image = await wallpaper(slug);
     if (image !== undefined) saved.background = image;

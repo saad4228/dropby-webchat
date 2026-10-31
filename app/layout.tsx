@@ -15,6 +15,7 @@ import "./football.css";
 import "./arcade.css";
 import "./cosmic.css";
 import "./retreats.css";
+import "./theme-assets.css";
 import "./message-deletion.css";
 import "./media.css";
 

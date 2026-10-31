@@ -4,12 +4,16 @@ import { api } from "../lib/client";
 import {
   defaultAppearance,
   loadAppearance,
+  readAppearance,
   saveAppearance,
   type Appearance,
 } from "../lib/appearance-store";
 
 export function useAppearance(slug: string, notify: (message: string) => void) {
-  const [appearance, setAppearance] = useState<Appearance>(defaultAppearance);
+  const [appearance, setAppearance] = useState<Appearance>(() => ({
+    ...defaultAppearance,
+    ...readAppearance(slug),
+  }));
   const [wallpaperUrl, setWallpaperUrl] = useState("");
   const touched = useRef(false);
 

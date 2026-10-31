@@ -167,7 +167,7 @@ public/        wallpapers, fonts, and static assets
 
 ## Checks that cover the important parts
 
-The suite includes **28 unit tests, 49 existing API checks, 12 smart-media API checks, 11 isolated storage-failure checks, and 33 browser journeys**, covering conversations, permissions, uploads, room themes, calls, music playback, and deleting your own messages. The visual comparison script covers 82 desktop/mobile views.
+The suite includes **28 unit tests, 49 existing API checks, 12 smart-media API checks, 11 isolated storage-failure checks, and 44 browser journeys**, covering conversations, permissions, uploads, room themes, calls, music playback, and deleting your own messages. The visual comparison script covers 82 desktop/mobile views.
 
 With the local server running:
 

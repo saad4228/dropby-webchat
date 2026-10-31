@@ -112,10 +112,10 @@
   opacity: 0.13;
 }
 .theme-thumb.theme-football:before {
-  background: url("/themes/football-light.png") center / cover;
+  background: var(--theme-preview) center / cover;
 }
 [data-mode="dark"] .theme-thumb.theme-football:before {
-  background-image: url("/themes/football-dark.png");
+  background-image: var(--theme-preview);
 }
 .theme-thumb.theme-football:after {
   inset: 0;

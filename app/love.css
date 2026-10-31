@@ -138,10 +138,10 @@
   opacity: 0.1;
 }
 .theme-thumb.theme-love:before {
-  background: url("/themes/love-light.png") center / cover;
+  background: var(--theme-preview) center / cover;
 }
 [data-mode="dark"] .theme-thumb.theme-love:before {
-  background-image: url("/themes/love-dark.png");
+  background-image: var(--theme-preview);
 }
 .theme-thumb.theme-love b {
   background: #fff5f9;

@@ -152,10 +152,10 @@
   font-size: 17px;
 }
 .theme-thumb.theme-arcade:before {
-  background: url("/themes/arcade-light.png") center / cover;
+  background: var(--theme-preview) center / cover;
 }
 [data-mode="dark"] .theme-thumb.theme-arcade:before {
-  background-image: url("/themes/arcade-dark.png");
+  background-image: var(--theme-preview);
 }
 .theme-thumb.theme-arcade b {
   background: #fff7fc;

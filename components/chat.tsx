@@ -37,6 +37,7 @@ import { Identity, Message as Msg, Snapshot, api } from "../lib/client";
 import { demoSnapshot } from "../lib/demo";
 import { contrastText } from "../lib/format";
 import { getTheme } from "../lib/themes";
+import { preloadTheme } from "../lib/theme-preload";
 import { EmojiMotionControl } from "./animated-emoji";
 import { Avatar } from "./brand";
 import CallPanel from "./call-panel";
@@ -56,6 +57,7 @@ export default function Chat({
   onLeave,
   onIdentity,
   demo = false,
+  initialSnapshot = null,
   onCreate,
 }: {
   slug: string;
@@ -65,10 +67,11 @@ export default function Chat({
   onLeave: () => void;
   onIdentity: () => void;
   demo?: boolean;
+  initialSnapshot?: Snapshot | null;
   onCreate: () => void;
 }) {
   const [data, setData] = useState<Snapshot | null>(
-      demo ? demoSnapshot(user) : null,
+      demo ? demoSnapshot(user) : initialSnapshot,
     ),
     [panel, setPanel] = useState(""),
     [text, setText] = useState(""),
@@ -119,6 +122,9 @@ export default function Chat({
     slug,
     notify,
   );
+  useEffect(() => {
+    preloadTheme(appearance.theme || data?.room.theme || "alpine");
+  }, [appearance.theme, data?.room.theme, dark]);
   const {
     recording,
     paused,
