@@ -1,0 +1,168 @@
+/* Rose glass by day, plum silk after dark. The wallpaper stays visible in the conversation. */
+.chat-app.theme-love {
+  --conversation-surface: color-mix(
+    in srgb,
+    var(--room-panel) calc(var(--glass-opacity, 0.87) * 48%),
+    transparent
+  );
+  --panel-action-bg: var(--room-soft);
+  --panel-action-ink: var(--room-ink);
+  --panel-action-border: var(--room-line);
+  --love-shadow: #79223f1a;
+  --love-highlight: #ffffff9c;
+  --love-chrome: color-mix(in srgb, var(--room-panel) 88%, transparent);
+}
+[data-mode="dark"] .chat-app.theme-love {
+  --love-shadow: #10050e55;
+  --love-highlight: #ffb0d01f;
+  --love-chrome: color-mix(in srgb, var(--room-panel) 88%, transparent);
+}
+.chat-app.theme-love .conversation-shell {
+  border-color: var(--love-highlight);
+  box-shadow:
+    0 16px 60px var(--love-shadow),
+    inset 0 1px var(--love-highlight);
+}
+.chat-app.theme-love .room-header,
+.chat-app.theme-love .room-rail {
+  border-color: var(--love-highlight);
+  box-shadow:
+    0 5px 28px var(--love-shadow),
+    inset 0 1px var(--love-highlight);
+}
+.chat-app.theme-love .conversation-toolbar {
+  background: var(--love-chrome);
+  border-radius: 25px 25px 0 0;
+  padding-block: 10px;
+}
+.chat-app.theme-love .conversation-heading > svg {
+  color: var(--accent);
+}
+.chat-app.theme-love .conversation-toolbar > .music-dock {
+  background: var(--room-soft);
+  border-color: var(--room-line);
+  border-radius: 20px;
+}
+.chat-app.theme-love .music-record {
+  background: var(--room-panel);
+  color: var(--accent);
+}
+.chat-app.theme-love .music-panel {
+  box-shadow: 0 17px 60px var(--love-shadow);
+}
+.chat-app.theme-love .composer-area {
+  background: var(--love-chrome);
+  border-top: 1px solid var(--room-line);
+  border-radius: 0 0 25px 25px;
+}
+.chat-app.theme-love .composer {
+  border-color: var(--room-line);
+  box-shadow: 0 3px 15px var(--love-shadow);
+  background: var(--room-panel);
+}
+.chat-app.theme-love .composer:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.chat-app.theme-love .send-button:not(:disabled) {
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 23%, transparent);
+}
+.chat-app.theme-love .send-button:disabled {
+  background: var(--room-soft);
+  color: var(--room-muted);
+}
+.chat-app.theme-love .message-bubble {
+  box-shadow:
+    0 3px 12px var(--love-shadow),
+    inset 0 1px var(--love-highlight);
+}
+.chat-app.theme-love .own .message-bubble {
+  border: 1px solid var(--love-highlight);
+  box-shadow: 0 4px 15px var(--love-shadow);
+}
+.chat-app.theme-love .message-bubble.emoji-only {
+  border-color: transparent;
+  box-shadow: none;
+}
+.chat-app.theme-love .message-byline,
+.chat-app.theme-love .message-receipt,
+.chat-app.theme-love .typing-indicator {
+  text-shadow:
+    0 1px 5px var(--room-panel),
+    0 0 10px var(--room-panel);
+}
+.chat-app.theme-love .message-byline {
+  color: var(--room-ink);
+}
+.chat-app.theme-love .message-reactions button {
+  background: var(--room-panel);
+  box-shadow: 0 2px 7px var(--love-shadow);
+}
+.chat-app.theme-love .message-reactions button.mine {
+  background: var(--room-soft);
+}
+.chat-app.theme-love .has-conversation .room-welcome {
+  background: var(--love-chrome);
+  box-shadow: 0 3px 14px var(--love-shadow);
+}
+.chat-app.theme-love .chat-date > span {
+  background: var(--room-panel);
+  border-radius: 20px;
+}
+.chat-app.theme-love .room-panel,
+.chat-app.theme-love .emoji-picker,
+.chat-app.theme-love .message-menu {
+  box-shadow: 0 16px 60px var(--love-shadow);
+}
+.chat-app.theme-love .room-header-actions > .room-call-action,
+.chat-app.theme-love .room-header-actions > .room-invite-action {
+  border-radius: 20px;
+}
+.chat-app.theme-love .room-home,
+.chat-app.theme-love .room-welcome-icon {
+  box-shadow: inset 0 1px var(--love-highlight);
+}
+.chat-app.theme-love .rail-item.active {
+  border-radius: 17px;
+}
+.chat-app.theme-love .rail-home .brand-symbol {
+  --page: var(--room-panel);
+}
+/* The supplied artwork already has ribbons and hearts; keep additional motion restrained. */
+.scene-love .love-ribbon,
+.scene-love .ambient-heart:nth-child(n + 5) {
+  display: none;
+}
+.scene-love .ambient-heart {
+  stroke: var(--accent);
+  opacity: 0.1;
+}
+.theme-thumb.theme-love:before {
+  background: url("/themes/love-light.png") center / cover;
+}
+[data-mode="dark"] .theme-thumb.theme-love:before {
+  background-image: url("/themes/love-dark.png");
+}
+.theme-thumb.theme-love b {
+  background: #fff5f9;
+  border-radius: 8px 8px 8px 2px;
+}
+.theme-thumb.theme-love b:nth-child(2) {
+  background: #a92360;
+  border-radius: 8px 8px 2px 8px;
+}
+[data-mode="dark"] .theme-thumb.theme-love b {
+  background: #48233b;
+}
+[data-mode="dark"] .theme-thumb.theme-love b:nth-child(2) {
+  background: #a12a60;
+}
+@media (max-width: 700px) {
+  .chat-app.theme-love .conversation-toolbar {
+    border-radius: 20px 20px 0 0;
+    padding-block: 8px;
+  }
+  .chat-app.theme-love .composer-area {
+    border-radius: 0 0 20px 20px;
+  }
+}

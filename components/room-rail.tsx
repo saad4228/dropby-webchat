@@ -6,7 +6,7 @@ import {
   Users,
   ArrowLeft,
 } from "lucide-react";
-import { Avatar } from "./brand";
+import { Avatar, BrandSymbol } from "./brand";
 import type { Identity } from "../lib/client";
 export function RoomRail({
   panel,
@@ -34,8 +34,7 @@ export function RoomRail({
         aria-label="Go to DropBy home"
         title="DropBy home"
       >
-        <MessageCircle size={26} fill="currentColor" strokeWidth={0} />
-        <span className="rail-home-dot" />
+        <BrandSymbol />
       </button>
       <span className="rail-divider" />
       <div className="rail-links">

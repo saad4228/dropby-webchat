@@ -1,4 +1,12 @@
 import { MessageCircle, ArrowUpRight } from "lucide-react";
+export function BrandSymbol() {
+  return (
+    <span className="brand-symbol" aria-hidden="true">
+      <MessageCircle size={25} fill="currentColor" strokeWidth={0} />
+      <i />
+    </span>
+  );
+}
 export function Brand({ onClick }: { onClick?: () => void }) {
   return (
     <button
@@ -8,10 +16,7 @@ export function Brand({ onClick }: { onClick?: () => void }) {
       }
       aria-label="DropBy home"
     >
-      <span className="brand-symbol">
-        <MessageCircle size={25} fill="currentColor" strokeWidth={0} />
-        <i />
-      </span>
+      <BrandSymbol />
       <span>
         dropby<span className="brand-dot">.</span>
       </span>

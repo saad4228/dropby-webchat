@@ -10,6 +10,7 @@ import "./creator.css";
 import "./harmony.css";
 import "./music.css";
 import "./studio.css";
+import "./love.css";
 
 export const metadata: Metadata = {
   title: "DropBy — Good conversations. Just a link away.",

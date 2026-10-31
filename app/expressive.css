@@ -221,56 +221,48 @@
 .theme-thumb:has(> svg) .theme-thumb-symbol {
   opacity: 0.5;
 }
-/* Love letters: soft petals, drifting hearts and rounded correspondence. */
+/* Love letters: the supplied rose and plum heartscapes, with matching surfaces. */
 .theme-love {
-  --accent: #b82e70;
+  --accent: #a92360;
   --accent-ink: #fff;
-  --sent: linear-gradient(125deg, #b52d72, #a63d93);
+  --sent: linear-gradient(125deg, #b32965, #942653);
   --sent-text: #fff;
-  --received: #fff9fd;
-  --received-text: #573348;
-  --room-panel: rgba(255, 248, 253, 0.97);
-  --room-header: rgba(255, 247, 252, var(--glass-opacity, 0.93));
-  --room-soft: #f9e6f0;
-  --room-line: #ce86ad40;
-  --room-ink: #593449;
-  --room-muted: #85596f;
-  --room-canvas: #fff8fc25;
+  --received: #fff5f9;
+  --received-text: #50243b;
+  --room-panel: rgba(255, 245, 250, 0.98);
+  --room-header: rgba(255, 243, 249, var(--glass-opacity, 0.9));
+  --room-soft: #f9e0ec;
+  --room-line: #a3326533;
+  --room-ink: #50243b;
+  --room-muted: #71384f;
+  --room-canvas: #fff2f64d;
 }
 [data-mode="dark"] .chat-app.theme-love {
-  --accent: #f4a4cc;
-  --accent-ink: #44233a;
-  --sent: linear-gradient(125deg, #ab3d78, #8c4b99);
-  --received: #49334c;
+  --accent: #ffa2c9;
+  --accent-ink: #401329;
+  --sent: linear-gradient(125deg, #a12a60, #7b285e);
+  --received: #3b1c32;
   --received-text: #ffecf6;
-  --room-panel: rgba(52, 36, 57, 0.98);
-  --room-header: rgba(56, 37, 59, var(--glass-opacity, 0.94));
-  --room-soft: #573b58;
-  --room-line: #e7acc338;
+  --room-panel: rgba(38, 16, 33, 0.98);
+  --room-header: rgba(43, 18, 36, var(--glass-opacity, 0.94));
+  --room-soft: #48233b;
+  --room-line: #f99acb33;
   --room-ink: #ffe9f4;
-  --room-muted: #d9b3ca;
-  --room-canvas: #38263c25;
+  --room-muted: #edbdd4;
+  --room-canvas: #230e1e4d;
 }
 .chat-app.theme-love > .chat-scenery {
   filter: none;
   background:
-    linear-gradient(125deg, #ffe5efbc, #f3e0f4b8),
-    var(
-      --custom-wallpaper,
-      radial-gradient(ellipse at 12% 30%, #e9aaca, transparent 60%)
-    ),
-    #fbeaf3;
+    linear-gradient(125deg, #fff2f51a, #ffe9f124),
+    var(--custom-wallpaper, url("/themes/love-light.png")), #f4a0bf;
   background-size: cover;
   background-position: center;
 }
 [data-mode="dark"] .chat-app.theme-love > .chat-scenery {
   background:
-    linear-gradient(125deg, #35253ce6, #4f2c45d4),
-    var(
-      --custom-wallpaper,
-      radial-gradient(ellipse at 15% 45%, #8f3f6f, transparent 65%)
-    ),
-    #34233d;
+    linear-gradient(125deg, #200c1b0d, #200c1b26),
+    var(--custom-wallpaper, url("/themes/love-dark.png")), #210b1d;
   background-size: cover;
 }
 .chat-app.theme-love > .chat-scenery:after {

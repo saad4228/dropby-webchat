@@ -59,14 +59,9 @@
   width: 46px;
   height: 45px;
 }
-.rail-home-dot {
-  position: absolute;
-  left: 21px;
-  top: 18px;
-  width: 4px;
-  height: 4px;
-  background: var(--accent-ink);
-  border-radius: 50%;
+.rail-home .brand-symbol {
+  --accent: #4e6bfa;
+  --page: var(--room-panel);
 }
 .rail-divider {
   height: 1px;
@@ -167,19 +162,19 @@
   background: var(--room-soft);
 }
 .chat-app .room-header {
-  height: 78px;
-  min-height: 78px;
+  height: 64px;
+  min-height: 64px;
   max-width: none;
   margin: 0;
   gap: 15px;
-  padding: 14px 19px;
-  border-radius: 24px;
+  padding: 9px 17px;
+  border-radius: 21px;
   box-shadow: 0 5px 28px #10233c0a;
 }
 .chat-app .room-home {
-  width: 47px;
-  height: 47px;
-  border-radius: 16px;
+  width: 41px;
+  height: 41px;
+  border-radius: 14px;
   flex-shrink: 0;
   box-shadow: none;
 }
@@ -187,10 +182,10 @@
   min-width: 0;
   align-items: flex-start;
   padding: 0;
-  gap: 7px;
+  gap: 4px;
 }
 .chat-app .room-title strong {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 750;
   letter-spacing: -0.6px;
   max-width: 280px;
@@ -749,7 +744,7 @@
   max-width: none;
 }
 .chat-app .room-panel {
-  top: 112px;
+  top: 98px;
   bottom: 24px;
   right: max(24px, calc((100vw - 1320px) / 2));
   width: 350px;
@@ -925,7 +920,7 @@
     border-radius: 22px;
   }
   .chat-app .room-header {
-    padding: 13px 15px;
+    padding: 9px 15px;
     gap: 12px;
   }
   .chat-app .header-room-tag {
@@ -934,7 +929,7 @@
   .chat-app .room-panel {
     right: 18px;
     bottom: 18px;
-    top: 108px;
+    top: 94px;
   }
   .chat-app .conversation-scroll {
     padding: 24px 28px 0;
@@ -979,9 +974,9 @@
     gap: 9px;
   }
   .chat-app .room-header {
-    height: 65px;
-    min-height: 65px;
-    padding: 9px 11px;
+    height: 58px;
+    min-height: 58px;
+    padding: 7px 11px;
     gap: 9px;
     border-radius: 20px;
   }
@@ -1267,7 +1262,7 @@
   .chat-app .room-panel {
     right: 9px;
     left: auto;
-    top: 82px;
+    top: 75px;
     bottom: 9px;
     width: calc(100% - 18px);
     max-width: 400px;
